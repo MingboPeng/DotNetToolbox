@@ -95,6 +95,9 @@ public class GenCsDTO : Generator
             if (!string.IsNullOrEmpty(module) && !module.StartsWith(moduleName))
                 continue;
 
+            // skip
+            if (key.Contains("ValidationError"))
+                continue;
 
             if (value.IsEnumeration)
             {
