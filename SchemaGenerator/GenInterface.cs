@@ -18,7 +18,7 @@ public class GenInterface : Generator
     public static void Execute()
     {
         var mapper = System.IO.Path.Combine(docDir, "model_mapper.json");
-        var interfaceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "src", sdkName, "Interface");
+        var interfaceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "src", "CSharpSDK", "Interface");
         if (Directory.Exists(interfaceDir))
             System.IO.Directory.Delete(interfaceDir, true);
 

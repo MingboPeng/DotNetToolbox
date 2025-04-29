@@ -246,7 +246,7 @@ public partial class Generator
         var packageName = sdkName;
 
         //# update the version for CSharp
-        var assemblyFile = System.IO.Path.Combine(root, "src", packageName, $"{packageName}.csproj");
+        var assemblyFile = System.IO.Path.Combine(root, "src", "CSharpSDK", $"{packageName}.csproj");
         if (File.Exists(assemblyFile))
         {
             var file = System.IO.File.ReadAllText(assemblyFile);
