@@ -31,15 +31,15 @@ public class GenCsService : GenProcessorBase
         // save to
         var srcSdkDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "src", $"{TemplateModels.Helper.Language}SDK");
         var srcModelDir = System.IO.Path.Combine(srcSdkDir, "Model"); // DTOs
-        var srcProcessorDir = System.IO.Path.Combine(srcSdkDir, "Processor"); // Services, MessageProcessor, MethodName
+        var srcServiceDir = System.IO.Path.Combine(srcSdkDir, "Service"); // Services, MessageProcessor, MethodName
 
         if (Directory.Exists(srcModelDir))
             Directory.Delete(srcModelDir, true);
         Directory.CreateDirectory(srcModelDir);
 
-        if (Directory.Exists(srcProcessorDir))
-            Directory.Delete(srcProcessorDir, true);
-        Directory.CreateDirectory(srcProcessorDir);
+        if (Directory.Exists(srcServiceDir))
+            Directory.Delete(srcServiceDir, true);
+        Directory.CreateDirectory(srcServiceDir);
 
 
         TemplateModels.CSharp.ServiceTemplateModel.SDKName = _sdkName;
@@ -56,7 +56,7 @@ public class GenCsService : GenProcessorBase
 
             // generate CSharp MessageProcessor
             var pClassFile = GenProcessorClass(templateDir, model, outputDir);
-            var targetSrcProcessor = System.IO.Path.Combine(srcProcessorDir, System.IO.Path.GetFileName(pClassFile));
+            var targetSrcProcessor = System.IO.Path.Combine(srcServiceDir, System.IO.Path.GetFileName(pClassFile));
             System.IO.File.Copy(pClassFile, targetSrcProcessor, true);
             Console.WriteLine($"Generated Service is added as {targetSrcProcessor}");
 
@@ -64,7 +64,7 @@ public class GenCsService : GenProcessorBase
             // generate Service
             var serviceFile = GenService(templateDir, model, outputDir);
             // copy to src dir
-            var targetSrcService = System.IO.Path.Combine(srcProcessorDir, System.IO.Path.GetFileName(serviceFile));
+            var targetSrcService = System.IO.Path.Combine(srcServiceDir, System.IO.Path.GetFileName(serviceFile));
             System.IO.File.Copy(serviceFile, targetSrcService, true);
             Console.WriteLine($"Generated Service is added as {targetSrcService}");
 
@@ -72,7 +72,7 @@ public class GenCsService : GenProcessorBase
             // generate MethodName Enum
             var enumfile = GenMethodNameEnum(templateDir, model, outputDir);
             // copy to src dir
-            var targetSrcEnum = System.IO.Path.Combine(srcProcessorDir, System.IO.Path.GetFileName(enumfile));
+            var targetSrcEnum = System.IO.Path.Combine(srcServiceDir, System.IO.Path.GetFileName(enumfile));
             System.IO.File.Copy(enumfile, targetSrcEnum, true);
             Console.WriteLine($"Generated MethodName Enum is added as {targetSrcEnum}");
 
