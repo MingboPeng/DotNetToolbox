@@ -6,12 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using SchemaGenerator;
+using System;
 
 namespace TemplateModels.TypeScript;
 public class ClassTemplateModel : ClassTemplateModelBase
 {
 
-    public List<ClassTemplateModel> DerivedClasses { get; set; }
+    public List<ClassTemplateModel> DerivedClasses { get; set; } // children classes
 
     public bool HasProperties => Properties.Any();
     public List<PropertyTemplateModel> Properties { get; set; }
@@ -61,7 +62,39 @@ public class ClassTemplateModel : ClassTemplateModelBase
             TsNestedValidatorImportsCode = string.Join(", ", TsNestedValidatorImports);
         }
         TsValidatorImportsCode = string.Join(", ", TsValidatorImports);
+
     }
+
+
+    public ClassTemplateModel(Type classType, System.Xml.Linq.XDocument xmlDoc) : base(classType, xmlDoc)
+    {
+        Properties = classType.GetProperties().Select(_ => new PropertyTemplateModel(_, xmlDoc)).ToList();
+        //ClassName = Helper.CleanName(ClassName);
+
+        var tsImports = Properties?.SelectMany(_ => _.TsImports)?.Distinct().Select(_ => new TsImport(_, from: null))?.ToList() ?? new List<TsImport>();
+        // remove importing self
+        tsImports = tsImports.Where(_ => _.Name != ClassName).ToList();
+        // remove duplicates
+        TsImports = tsImports.GroupBy(_ => _.Name).Select(_ => _.First()).OrderBy(_ => _.Name).ToList();
+
+        // fix TsImports
+        TsImports.ForEach(_ => _.Check());
+
+        var paramValidators = Properties.SelectMany(_ => _.ValidationDecorators).Select(_ => ValidationDecoratorToImport(_)).ToList();
+        paramValidators.Add("validate");
+        paramValidators.Add("ValidationError as TsValidationError");
+        TsValidatorImports = paramValidators.Distinct().ToList();
+        TsValidatorImports = TsValidatorImports.Where(_ => _ != "Type").ToList();
+        var nestedValidators = TsValidatorImports.Where(x => x.StartsWith("IsNested")).ToList();
+        if (nestedValidators.Any())
+        {
+            TsValidatorImports = TsValidatorImports.Where(_ => !_.StartsWith("IsNested")).ToList();
+            TsNestedValidatorImports = nestedValidators;
+            TsNestedValidatorImportsCode = string.Join(", ", TsNestedValidatorImports);
+        }
+        TsValidatorImportsCode = string.Join(", ", TsValidatorImports);
+    }
+
 
     public static string ValidationDecoratorToImport(string decorator)
     {

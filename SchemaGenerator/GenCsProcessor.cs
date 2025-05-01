@@ -9,6 +9,9 @@ using System.Linq;
 
 namespace SchemaGenerator;
 
+/// <summary>
+/// This is old, use GenCsService
+/// </summary>
 public class GenCsProcessor : GenProcessorBase
 {
     internal static void Execute()

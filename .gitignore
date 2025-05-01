@@ -23,6 +23,7 @@ build/
 node_modules/
 **/*.pyc
 [Oo]utput/
+ServiceSource/
 
 # NuGet Packages
 *.nupkg

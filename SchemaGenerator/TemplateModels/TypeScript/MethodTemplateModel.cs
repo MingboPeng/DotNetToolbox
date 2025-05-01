@@ -1,6 +1,7 @@
 ﻿using NSwag;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TemplateModels.Base;
 
 namespace TemplateModels.TypeScript;
@@ -9,7 +10,6 @@ public class MethodTemplateModel: MethodTemplateModelBase
 {
     public PropertyTemplateModel ReturnType { get; set; }
     public List<PropertyTemplateModel> Params { get; set; }
-    public List<string> SchemaTypes { get; set; }
 
     public List<string> TsImports { get; set; } = new List<string>();
 
@@ -48,4 +48,18 @@ public class MethodTemplateModel: MethodTemplateModelBase
 
     }
 
+    public MethodTemplateModel(MethodInfo methodInfo, MethodDoc document = default) : base(methodInfo, document)
+    {
+        Params = methodInfo.GetParameters().Select(_ => new PropertyTemplateModel(_, document?.Params?.GetValueOrDefault(_.Name))).ToList();
+        HasParameter = (Params?.Any()).GetValueOrDefault();
+
+        var allTsImports = Params?.SelectMany(_ => _.TsImports)?.ToList() ?? new List<string>();
+
+        if (this.HasReturn)
+        {
+            ReturnType = new PropertyTemplateModel(methodInfo.ReturnParameter, document.Returns);
+            allTsImports.AddRange(ReturnType.TsImports);
+        }
+        TsImports = allTsImports;
+    }
 }

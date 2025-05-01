@@ -5,6 +5,10 @@ using NJsonSchema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Data;
+using Newtonsoft.Json;
+using System.Collections;
 
 namespace TemplateModels.TypeScript;
 
@@ -22,8 +26,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public bool HasTsImports => TsImports.Any();
 
 
-
-    public bool HasValidationDecorators => ValidationDecorators.Any();
+    public bool HasValidationDecorators => (ValidationDecorators?.Any()).GetValueOrDefault();
     public List<string> ValidationDecorators { get; set; }
 
     public bool HasTransformDecorator => !string.IsNullOrWhiteSpace(TransformDecorator);
@@ -57,6 +60,55 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
 
 
     }
+
+
+    public PropertyTemplateModel(ParameterInfo parameterInfo, string document) : base(parameterInfo)
+    {
+        // get default value for property for the current client
+        if (this.HasDefault)
+            DefaultCodeFormat = ConvertTsDefaultValue(parameterInfo.ParameterType, this.Default);
+
+        TsParameterName = Helper.CleanParameterName(PropertyName);
+        Description = String.IsNullOrEmpty(document) ? TsParameterName : document;
+
+        //var thisAssembly = parameterInfo.ParameterType.Assembly;
+        TsImports =
+            Helper.GetTypes(parameterInfo.ParameterType)
+            .Where(_ => _.Namespace == "DTO")
+            .Select(t => t.Name)?
+            .Distinct()?
+            .ToList() ?? new List<string>();
+
+  
+    }
+
+    public PropertyTemplateModel(PropertyInfo propertyInfo, System.Xml.Linq.XDocument xmlDoc) : base(propertyInfo, xmlDoc)
+    {
+        // get default value for property for the current client
+        if (this.HasDefault)
+            DefaultCodeFormat = ConvertTsDefaultValue(propertyInfo.PropertyType, this.Default);
+
+        TsParameterName = Helper.CleanParameterName(PropertyName);
+        TsPropertyName = TsParameterName; // make it camelCase
+        Description = String.IsNullOrEmpty(Description) ? TsParameterName : Description;
+
+        TsImports =
+           Helper.GetTypes(propertyInfo.PropertyType)
+           .Where(_ => _.Namespace == "DTO")
+           .Select(t => t.Name)?
+           .Distinct()?
+           .ToList() ?? new List<string>();
+
+
+        ConvertToJavaScriptCode = $"data[\"{TsPropertyName}\"] = this.{TsPropertyName};";
+        ConvertToClassCode = $"this.{TsPropertyName} = obj.{TsPropertyName};";
+        //validation decorators
+        ValidationDecorators = GetValidationDecorators(propertyInfo.PropertyType);
+
+        // get @Transform
+        //TransformDecorator = GetTransform(json, false);
+    }
+
     public static string GetTransform(JsonSchema json, bool isArray)
     {
         var code = string.Empty;
@@ -175,6 +227,156 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         {"Number", "number" },
         {"Boolean", "boolean" }
     };
+
+    private static bool IsTypeEnumerable(Type type)
+    {
+        bool isEnumerable = typeof(IEnumerable).IsAssignableFrom(type);
+        var isArray = isEnumerable && type != typeof(string);
+        return isArray;
+    }
+
+    private static List<string> GetValidationDecorators(Type type, bool isArrayItem, bool isRequired)
+    {
+        var result = new List<string>();
+        var isArray = IsTypeEnumerable(type);
+        if (isArray)
+        {
+            var arrayItem = type.GetGenericArguments()[0];
+            var decos = GetValidationDecorators(arrayItem, isArrayItem: true, isRequired: isRequired);
+
+            result.Add("@IsArray({ each: true })"); // Ensures each item in the array is also an array.
+            result.Add("@ValidateNested({each: true })");// Ensures each item in the array is validated as a nested object.
+            result.Add($"@Type(() => Array)"); //Helps class-transformer understand that each item in the array should be treated as an array.
+
+            result.AddRange(decos);
+
+            return result;
+        }
+
+
+        var propType = type.Name;
+        var isValueType = type.IsValueType || type == typeof(string);
+        if (!isValueType)
+        {
+            var refPropType = propType;
+            if (type.IsEnum)
+            {
+                result.Add(isArrayItem ? $"@IsEnum({refPropType}, {{ each: true }})" : $"@IsEnum({refPropType})");
+                result.Add($"@Type(() => String)");
+            }
+            else
+            {
+                result.Add(isArrayItem ? $"@IsInstance({refPropType}, {{ each: true }})" : $"@IsInstance({refPropType})");
+                result.Add($"@Type(() => {refPropType})");
+                result.Add(isArrayItem ? "@ValidateNested({ each: true })" : "@ValidateNested()");
+            }
+
+        }
+        else if (type == typeof(int) || type == typeof(long) || type == typeof(short) || type == typeof(byte)) // number
+        {
+            result.Add(isArrayItem ? "@IsInt({ each: true })" : "@IsInt()");
+        }
+        else if (type == typeof(double) || type == typeof(float) || type == typeof(decimal)) // number
+        {
+            result.Add(isArrayItem ? "@IsNumber({},{ each: true })" : "@IsNumber()");
+        }
+        else if (type == typeof(string) || type == typeof(char)) // string
+        {
+            result.Add(isArrayItem ? "@IsString({ each: true })" : "@IsString()");
+        }
+        else if (type == typeof(bool)) // boolean
+        {
+            result.Add(isArrayItem ? "@IsBoolean({ each: true })" : "@IsBoolean()");
+        }
+        else if (type == typeof(DateTime)) //Date
+        {
+            result.Add(isArrayItem ? "@IsDate({ each: true })" : "@IsDate()");
+        }
+        else if (type == typeof(Guid)) // string
+        {
+            result.Add(isArrayItem ? "@IsUUID({ each: true })" : "@IsUUID()");
+        }
+        else
+        {
+            result.Add($"@IsTypee {type.Name}");
+
+            //result.Add($"@IsObject()");
+        }
+
+        return result;
+    }
+
+    public List<string> GetValidationDecorators(Type type)
+    {
+        var result = new List<string>();
+        if (this.IsArray)
+        {
+            result.Add("@IsArray()");
+            var arrayItem = type.GetGenericArguments()[0];
+            var decos = GetValidationDecorators(arrayItem, isArrayItem: true, isRequired: this.IsRequired);
+
+            if (IsTypeEnumerable(type))
+            {
+                var IsNestedNumberArray = decos.Any(_ => _.StartsWith("@IsNumber"));
+                var IsNestedIntegerArray = decos.Any(_ => _.StartsWith("@IsInt"));
+                var IsNestedStringArray = decos.Any(_ => _.StartsWith("@IsString"));
+
+                if (IsNestedNumberArray)
+                    result.Add("@IsNestedNumberArray()"); // for number[][] or number[][][] types
+                else if (IsNestedIntegerArray)
+                    result.Add("@IsNestedIntegerArray()"); // for number[][] or number[][][] types
+                else if (IsNestedStringArray)
+                    result.Add("@IsNestedStringArray()"); // for number[][] or number[][][] types
+                else
+                    result.AddRange(decos);
+            }
+            else
+            {
+                result.AddRange(decos);
+            }
+
+        }
+        else
+        {
+            var decos = GetValidationDecorators(type, isArrayItem: false, isRequired: this.IsRequired);
+            result.AddRange(decos);
+        }
+
+        if (this.IsRequired)
+        {
+            result.Add($"@IsDefined()");
+        }
+        else
+        {
+            result.Add($"@IsOptional()");
+        }
+
+
+        if (this.HasPattern)
+        {
+            result.Add($"@Matches(/{this.Pattern}/)");
+        }
+        if (this.HasMinimum)
+        {
+            result.Add($"@Min({this.Minimum})");
+        }
+        if (this.HasMaximum)
+        {
+            result.Add($"@Max({this.Maximum})");
+        }
+        if (this.HasMinLength)
+        {
+            result.Add($"@MinLength({this.MinLength})");
+        }
+        if (this.HasMaxLength)
+        {
+            result.Add($"@MaxLength({this.MaxLength})");
+        }
+
+        return result;
+
+    }
+
 
     private static List<string> GetValidationDecorators(JsonSchema json, bool isArrayItem, bool isRequired)
     {
@@ -311,6 +513,36 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         if (type == Type)
             return;
         TsImports.Add(type);
+    }
+
+    private static string ConvertTsDefaultValue(Type propType, object defaultV)
+    {
+        var defaultValue = defaultV;
+        var defaultCodeFormat = string.Empty;
+        if (defaultValue == null) return defaultCodeFormat;
+
+        if (defaultValue is string)
+        {
+            defaultCodeFormat = $"\"{defaultValue}\"";
+            // is enum
+            if (propType.IsEnum)
+            {
+                var enumType = propType.Name;
+                var cleanEnumValue = Helper.ToPascalCase(Helper.CleanName(defaultValue.ToString(), true), true);
+                defaultCodeFormat = $"{enumType}.{cleanEnumValue}";
+            }
+
+        }
+        else if (propType.ToString() == "Boolean")
+        {
+            defaultCodeFormat = defaultValue.ToString().ToLower();
+        }
+        else
+        {
+            defaultCodeFormat = defaultValue?.ToString();
+        }
+
+        return defaultCodeFormat;
     }
 
     private static string ConvertTsDefaultValue(JsonSchema prop)

@@ -5,6 +5,7 @@ using NJsonSchema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace TemplateModels.CSharp;
 
@@ -13,26 +14,9 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public static string NameSpaceName => ClassTemplateModel.SDKName;
     public string CsPropertyName { get; set; }
     public string CsParameterName { get; set; }
+    public string CsJsonPropertyNameName { get; set; }
     public string ConstructionParameterCode { get; set; }
 
-    public List<string> TsImports { get; set; } = new List<string>();
-    public bool HasTsImports => TsImports.Any();
-
-    public bool HasValidationDecorators => ValidationDecorators.Any();
-    public List<string> ValidationDecorators { get; set; }
-    public string Pattern { get; set; }
-    public bool HasPattern => !string.IsNullOrEmpty(Pattern);
-    public decimal? Maximum { get; set; }
-    public bool HasMaximum => Maximum.HasValue;
-    public decimal? Minimum { get; set; }
-    public bool HasMinimum => Minimum.HasValue;
-    //public bool IsInherited { get; set; }
-    public bool IsValueType { get; set; }
-    public bool IsEnumType { get; set; }
-    public int? MaxLength { get; set; }
-    public bool HasMaxLength => MaxLength.HasValue;
-    public int? MinLength { get; set; }
-    public bool HasMinLength => MinLength.HasValue;
 
 
     public PropertyTemplateModel(string name, JsonSchemaProperty json) : this(name, json, json.IsRequired, json.IsReadOnly)
@@ -63,7 +47,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         CsParameterName = Helper.CleanParameterName(PropertyName);
         CsPropertyName = Helper.CleanPropertyName(PropertyName);
         Description = String.IsNullOrEmpty(Description) ? CsPropertyName : Description;
-
+        CsJsonPropertyNameName = PropertyName;
 
         Pattern = json.Pattern;
         Maximum = json.Maximum;
@@ -87,6 +71,76 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     }
 
 
+    public PropertyTemplateModel(ParameterInfo parameterInfo, string document) : base(parameterInfo)
+    {
+        // get default value for property for the current client
+        if (this.HasDefault)
+            DefaultCodeFormat = ConvertDefaultValue(parameterInfo.ParameterType, this.Default);
+
+        CsParameterName = Helper.CleanParameterName(PropertyName);
+        Description = String.IsNullOrEmpty(document) ? CsParameterName : document;
+
+        if (parameterInfo.HasDefaultValue)
+            this.Default = CheckDefaultValue(parameterInfo.DefaultValue);
+
+        // check default value for constructor parameter
+        ConstructionParameterCode = $"{Type} {CsParameterName}";
+        if (!this.IsRequired)
+        {
+            var optionalValue = string.IsNullOrEmpty(DefaultCodeFormat) ? "default" : DefaultCodeFormat;
+            optionalValue = IsArray ? "default" : optionalValue;
+            optionalValue = Type.StartsWith("AnyOf") ? "default" : optionalValue;
+            optionalValue = optionalValue.StartsWith("new ") ? "default" : optionalValue;
+            ConstructionParameterCode = $"{ConstructionParameterCode} = {optionalValue}";
+        }
+
+        IsEnumType = parameterInfo.ParameterType.IsEnum;
+        IsValueType = parameterInfo.ParameterType.IsValueType;
+    }
+
+    public PropertyTemplateModel(PropertyInfo propertyInfo, System.Xml.Linq.XDocument xmlDoc) : base(propertyInfo, xmlDoc)
+    {
+        // get default value for property for the current client
+        if (this.HasDefault)
+            DefaultCodeFormat = ConvertDefaultValue(propertyInfo.PropertyType, this.Default);
+
+
+        CsParameterName = Helper.CleanParameterName(PropertyName);
+        CsPropertyName = Helper.CleanPropertyName(PropertyName);
+        Description = String.IsNullOrEmpty(Description) ? CsParameterName : Description;
+        CsJsonPropertyNameName = CsParameterName; // make it camelCase
+
+        // check default value for constructor parameter
+        ConstructionParameterCode = $"{Type} {CsParameterName}";
+        if (!this.IsRequired)
+        {
+            var optionalValue = string.IsNullOrEmpty(DefaultCodeFormat) ? "default" : DefaultCodeFormat;
+            optionalValue = IsArray ? "default" : optionalValue;
+            optionalValue = Type.StartsWith("AnyOf") ? "default" : optionalValue;
+            optionalValue = optionalValue.StartsWith("new ") ? "default" : optionalValue;
+            ConstructionParameterCode = $"{ConstructionParameterCode} = {optionalValue}";
+        }
+
+        IsEnumType = propertyInfo.PropertyType.IsEnum;
+        IsValueType = propertyInfo.PropertyType.IsValueType;
+    }
+
+
+
+    private static object CheckDefaultValue(object dValue)
+    {
+        if (dValue == null)
+        {
+            return "null";
+        }
+
+        if (dValue is string ss)
+        {
+            dValue = $"\"{ss}\"";
+        }
+
+        return dValue;
+    }
 
     public static string GetTypeString(JsonSchema json)
     {
@@ -194,6 +248,39 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         "int", "double", "bool"
     };
 
+    private static string ConvertDefaultValue(Type propType, object defaultV)
+    {
+        var defaultValue = defaultV;
+        var defaultCodeFormat = string.Empty;
+        if (defaultValue == null) return defaultCodeFormat;
+
+        if (defaultValue is string)
+        {
+            defaultCodeFormat = $"\"{defaultValue}\"";
+            // is enum
+            if (propType.IsEnum)
+            {
+                var enumType = propType.Name;
+                var cleanEnumValue = Helper.ToPascalCase(Helper.CleanName(defaultValue.ToString(), true), true);
+                defaultCodeFormat = $"{enumType}.{cleanEnumValue}";
+            }
+
+        }
+        else if (propType.ToString() == "Boolean")
+        {
+            defaultCodeFormat = defaultValue.ToString().ToLower();
+        }
+        else if (propType.ToString() == "Double")
+        {
+            defaultCodeFormat = $"{defaultValue}D";
+        }
+        else
+        {
+            defaultCodeFormat = defaultValue?.ToString();
+        }
+
+        return defaultCodeFormat;
+    }
 
     private static string ConvertDefaultValue(JsonSchema prop)
     {
@@ -272,4 +359,6 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
 
         return defaultCodeFormat;
     }
+
+   
 }

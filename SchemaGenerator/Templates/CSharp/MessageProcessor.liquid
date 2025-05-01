@@ -6,14 +6,14 @@ using Pollination.BrowserMessageHandler;
 // Auto-generated
 namespace {{ NameSpaceName }}
 {
-    public partial class {{ClassName}}
+    public partial class MessageProcessor
     {
         public static string SDKName = "{{NameSpaceName}}";
         public static string SDKVersion = "{{SDKVersion}}";
         private ServiceHub serviceHub;
 
 
-        public {{ClassName}}(InteractionCsService service, InteractionTsService tsService = default)
+        public MessageProcessor(ServiceBase service, InteractionTsService tsService = default)
         {
             if (service == null) 
                 throw new ArgumentNullException(nameof(service));

@@ -4,6 +4,9 @@ using System.IO;
 
 namespace SchemaGenerator;
 
+/// <summary>
+/// This is old, use GenTsService
+/// </summary>
 public class GenTsProcessor : GenProcessorBase
 {
     internal static void Execute()

@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 {% for Package in CsPackages -%}
 using {{ Package }};
 {% endfor -%}
-{% endif -%}
+{% endif %}
 
 namespace {{ NameSpaceName }}
 {
 
-	public abstract class InteractionCsService
+	public abstract class {{ ClassName }}: ServiceBase
 	{
 		{% for method in Methods %} {%- assign skipComma = true %}
 		/// <summary>

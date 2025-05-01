@@ -1,7 +1,7 @@
 ﻿using NJsonSchema;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace TemplateModels.Base;
 
@@ -21,6 +21,20 @@ public class EnumTemplateModelBase
         //ClimateZone 
         if (EnumName == "ClimateZones")
             EnumItems.ForEach(_ => _.Key = $"ASHRAE_{_.Value}");
+
+    }
+
+    public EnumTemplateModelBase(System.Type type, System.Xml.Linq.XDocument xmlDoc)
+    {
+        //Description = json.Description?.Replace("\n", "\\n");
+        EnumName = type.Name;
+        EnumItems = Enum.GetNames(type).Select((_, i) => new EnumItemTemplateModelBase(i + 1, _)).ToList();
+
+        string xmlEnumName = $"T:{type.FullName}"; // Fully qualified enum name
+        Description = xmlDoc.Descendants("member")
+                 .Where(m => (string)m.Attribute("name") == xmlEnumName)
+                 .Select(m => m.Element("summary")?.Value.Trim())
+                 .FirstOrDefault();
 
     }
 }

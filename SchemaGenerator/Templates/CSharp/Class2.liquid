@@ -104,8 +104,8 @@ namespace {{ NameSpaceName }}
         [Range({% if property.HasMinimum %}{{ property.Minimum }}{% else %}{{ property.Type }}.MinValue{% endif %}, {% if property.HasMaximum %}{{ property.Maximum }}{% else %}{{ property.Type }}.MaxValue{% endif %})]{% endif %}{% if property.HasMinLength %}
         [MinLength({{ property.MinLength }})]{% endif %}{% if property.HasMaxLength %}
         [MaxLength({{ property.MaxLength }})]{% endif %}
-        [DataMember(Name = "{{ property.PropertyName }}"{% if property.IsRequired %}, IsRequired = true{% endif %})] // For Newtonsoft.Json
-        [System.Text.Json.Serialization.JsonPropertyName("{{ property.PropertyName }}")] // For System.Text.Json
+        [DataMember(Name = "{{ property.CsJsonPropertyNameName }}"{% if property.IsRequired %}, IsRequired = true{% endif %})] // For Newtonsoft.Json
+        [System.Text.Json.Serialization.JsonPropertyName("{{ property.CsJsonPropertyNameName }}")] // For System.Text.Json
         public {{ property.Type }} {{ property.CsPropertyName }} { get;{% if property.IsReadOnly %} protected{% endif %} set; }{% if property.HasDefault %} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};{% endif %}
 	{%- endfor -%}
 

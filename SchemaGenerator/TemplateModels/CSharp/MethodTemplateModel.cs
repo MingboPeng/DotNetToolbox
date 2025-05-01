@@ -1,6 +1,7 @@
 ﻿using NSwag;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TemplateModels.Base;
 
 namespace TemplateModels.CSharp;
@@ -9,6 +10,7 @@ public class MethodTemplateModel: MethodTemplateModelBase
 {
     public PropertyTemplateModel ReturnType { get; set; }
     public List<PropertyTemplateModel> Params { get; set; }
+  
 
     public MethodTemplateModel(string pathName, OpenApiPathItem openApi):base(pathName, openApi)
     {
@@ -35,6 +37,13 @@ public class MethodTemplateModel: MethodTemplateModelBase
 
         HasReturn = ReturnTypeName != "void";
 
+    }
+
+
+    public MethodTemplateModel(MethodInfo methodInfo, MethodDoc document = default):base(methodInfo, document)
+    {
+        Params = methodInfo.GetParameters().Select(_ => new PropertyTemplateModel(_, document?.Params?.GetValueOrDefault(_.Name))).ToList();
+        HasParameter = (Params?.Any()).GetValueOrDefault();
     }
 
 }

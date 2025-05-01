@@ -8,6 +8,9 @@ public class EnumTemplateModel: EnumTemplateModelBase
     public EnumTemplateModel(JsonSchema json):base(json)
     {
     }
+    public EnumTemplateModel(System.Type type, System.Xml.Linq.XDocument xmlDoc) : base(type, xmlDoc)
+    {
+    }
 }
 
 

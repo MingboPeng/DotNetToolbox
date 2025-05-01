@@ -1,6 +1,8 @@
 ﻿using NSwag;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace TemplateModels.Base;
 
@@ -40,6 +42,23 @@ public class MethodTemplateModelBase
 
 
     }
+
+
+    public MethodTemplateModelBase(MethodInfo methodInfo, MethodDoc document = default)
+    {
+
+        var returnParam = methodInfo.ReturnParameter;
+        ReturnTypeName = Helper.GetCheckTypeName(returnParam.ParameterType);
+        HasReturn = !string.IsNullOrEmpty(ReturnTypeName) && returnParam.ParameterType != typeof(void) && returnParam.ParameterType != typeof(Task);
+
+        MethodName = methodInfo.Name;
+       
+
+        Document = document?.Summary;
+        ReturnDoc = document?.Returns;
+
+    }
+
     public override string ToString()
     {
         return this.MethodName;

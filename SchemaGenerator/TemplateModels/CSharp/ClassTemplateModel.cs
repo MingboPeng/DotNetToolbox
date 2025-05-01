@@ -4,7 +4,7 @@ using NJsonSchema.CodeGeneration;
 using NSwag;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System;
 
 namespace TemplateModels.CSharp;
 
@@ -64,6 +64,16 @@ public class ClassTemplateModel : ClassTemplateModelBase
 
     }
 
+
+    public ClassTemplateModel(Type classType, System.Xml.Linq.XDocument xmlDoc): base(classType, xmlDoc)
+    {
+        Properties = classType.GetProperties().Select(_ => new PropertyTemplateModel(_, xmlDoc)).ToList();
+        CsClassName = Helper.CleanName(ClassName);
+
+        AllProperties = Properties.DistinctBy(_ => _.PropertyName).OrderByDescending(_ => _.IsRequired).ToList();
+    }
+
+  
 
 
 }

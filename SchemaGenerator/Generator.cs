@@ -79,6 +79,9 @@ public partial class Generator
 
         _buildVersion = args.Contains("--useApiVersion") ? GetVersion() : GetNextVersion();
 
+        GenService.Execute();
+        return;
+
 
         // download all json files
         if (args.Contains("--download"))

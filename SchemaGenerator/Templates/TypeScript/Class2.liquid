@@ -25,7 +25,7 @@ export {% if IsAbstract %}abstract {% endif %}class {{ ClassName }}{% if HasInhe
 {%  if property.HasDescription -%}
     /** {{ property.Description }} */
 {%  endif -%}
-    {{ property.PropertyName }}{% if property.IsRequired %}!{% else %}?{% endif %}: {{ property.Type }}{{ property.TypePostfix }};
+    {{ property.TsPropertyName }}{% if property.IsRequired %}!{% else %}?{% endif %}: {{ property.Type }}{{ property.TypePostfix }};
 	
 {% endfor -%}
 
@@ -36,7 +36,7 @@ export {% if IsAbstract %}abstract {% endif %}class {{ ClassName }}{% if HasInhe
 {% if HasProperties -%}
 {%  for property in Properties -%}
 {%      if property.HasDefault -%}
-        this.{{ property.PropertyName }} = {{ property.DefaultCodeFormat | strip | tab }};
+        this.{{ property.TsPropertyName }} = {{ property.DefaultCodeFormat | strip | tab }};
 {%      endif -%}
 {%  endfor -%}
 {% endif -%}
@@ -84,13 +84,10 @@ export {% if IsAbstract %}abstract {% endif %}class {{ ClassName }}{% if HasInhe
 {% endfor -%}
 {% if HasInheritance -%}
         data = super.toJSON(data);
-        return instanceToPlain(data);
-{%     else -%}
-        return removeUndefinedProperties(data);
 {% endif -%}
+        return instanceToPlain(data);
     }
 
-{%  if HasInheritance -%}
 	async validate(): Promise<boolean> {
         const errors = await validate(this);
         if (errors.length > 0){
@@ -99,21 +96,4 @@ export {% if IsAbstract %}abstract {% endif %}class {{ ClassName }}{% if HasInhe
 		}
         return true;
     }
-{% endif -%}
 }
-
-{%  if HasInheritance == false -%}
-function removeUndefinedProperties(obj: any): any {
-    if (Array.isArray(obj)) {
-        return obj.map(removeUndefinedProperties);
-    } else if (obj !== null && typeof obj === 'object') {
-        return Object.entries(obj)
-        .filter(([_, value]) => value !== undefined)
-        .reduce((acc, [key, value]) => {
-            acc[key] = removeUndefinedProperties(value);
-            return acc;
-        }, {} as any);
-    }
-    return obj;
-}
-{% endif -%}
