@@ -15,19 +15,25 @@ namespace SchemaGenerator;
 
 public class GenService : GenProcessorBase
 {
-    internal static void Execute()
+    internal static void Execute(bool genCs, bool genTs)
     {
         // schema source dir
-        var sourceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "ServiceSource");
+        //var sourceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "ServiceSource");
         // load service interface from cs file
-        LoadServiceSource(sourceDir, out var services, out var dtos);
+        LoadServiceSource(servieSourceDir, out var services, out var dtos);
 
-        // generate CS services and dtos 
-        GenCsService.Execute(services, dtos, _sourceDoc);
+        if (genCs)
+        {
+            // generate CS services and dtos 
+            GenCsService.Execute(services, dtos, _sourceDoc);
+        }
 
-        // generate TS services and dtos
-        GenTsService.Execute(services, dtos, _sourceDoc);
-
+        if (genTs)
+        {
+            // generate TS services and dtos
+            GenTsService.Execute(services, dtos, _sourceDoc);
+        }
+    
     }
 
     private static System.Xml.Linq.XDocument _sourceDoc;
@@ -41,8 +47,9 @@ public class GenService : GenProcessorBase
 
     private static List<Type> LoadSourceCode(string sourceDir)
     {
-        Console.WriteLine("Loading/compiling source code from:", sourceDir);
+        Console.WriteLine($"Loading/compiling source code from: {sourceDir}");
         var csFiles = System.IO.Directory.GetFiles(sourceDir, "*.cs", SearchOption.AllDirectories);
+  
         var syntaxTrees = csFiles.Select(_ => CSharpSyntaxTree.ParseText(File.ReadAllText(_))).ToList();
 
         var references = new[]

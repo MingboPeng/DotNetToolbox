@@ -24,10 +24,14 @@ public class ServiceTemplateModel: TemplateModels.Base.ServiceTemplateModelBase
 
     public ServiceTemplateModel(Type classType, System.Xml.Linq.XDocument xmlDoc)
     {
-        Methods = classType.GetMethods().Select(_ => new MethodTemplateModel(_, GetDoc(xmlDoc, _))).ToList();
-  
         var name = classType.Name;
         ClassName = name.StartsWith("I") ? name.Substring(1) : name;
+
+        Methods = classType.GetMethods().Select(_ => new MethodTemplateModel(_, GetDoc(xmlDoc, _))).ToList();
+        // update operation id for matching methods between C# and TS.
+        // OperationId for each methods have to be kept same between C# and Ts
+        Methods.ForEach(_ => _.OperationId = $"{ClassName}.{_.MethodName}");
+
     }
 
 }

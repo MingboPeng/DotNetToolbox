@@ -7,10 +7,10 @@
 // Auto-generated
 namespace {{ NameSpaceName }}
 {
-    public enum MethodName
+    public enum {{ClassName}}Method
     {
-        {%- for method in Methods %}
+        {%- for method in Methods -%}
         {{ method.MethodName }},
-        {%- endfor %}
+        {%- endfor -%}
     }
 }

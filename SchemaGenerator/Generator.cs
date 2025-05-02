@@ -16,7 +16,7 @@ public partial class Generator
     protected static Config _config;
     public static string sdkName => _config.sdkName; //"DragonflySchema";
     public static string moduleName => _config.moduleName; // "dragonfly_schema";
-    static string _buildVersion = "0.0.1";
+    static string _buildVersion = "0.1.1";
     public static string BuildVersion => _buildVersion;
     public static string workingDir = Environment.CurrentDirectory;
     public static string rootDir => workingDir.Substring(0, workingDir.IndexOf(_generatorFolder) + _generatorFolder.Length);
@@ -25,6 +25,8 @@ public partial class Generator
     public static string defaultConfigPath = Path.Combine(docDir, "config.json");
     public static string outputDir => System.IO.Path.Combine(rootDir, _toolFolder, "Output");
     public static string templateDir => System.IO.Path.Combine(rootDir, _toolFolder, "Templates");
+    public static string servieSourceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "ServiceSource");
+
 
     static void Main(string[] args)
     {
@@ -35,6 +37,8 @@ public partial class Generator
         if (!System.IO.Directory.Exists(rootDir))
             throw new ArgumentException($"Invalid {rootDir}");
         Console.WriteLine($"Current root dir: {rootDir}");
+        Console.WriteLine($"Current docDir: {docDir}");
+        Console.WriteLine($"Current servieSourceDir: {servieSourceDir}");
 
 
         System.IO.Directory.CreateDirectory(outputDir);
@@ -47,9 +51,12 @@ public partial class Generator
             "--genCsProcessor",
             "--genTsProcessor",
             "--genCsInterface",
-            "--updateVersion",
-            "--useApiVersion",
-            "--config"
+            "--updateVersion", // check nuget server to the next version
+            "--useApiVersion", // use the version from OpenApi json file
+            "--version", // an override version with highest priority
+            "--config",
+            "--genCsService",
+            "--genTsService"
         };
 
         if (args == null || !args.Any())
@@ -72,16 +79,40 @@ public partial class Generator
                 configPath = p;
             }
         }
+        if (!System.IO.File.Exists(configPath))
+        {
+            configPath = System.IO.Path.Combine(servieSourceDir, "config.json");
+        }
+
+
+        if (!System.IO.File.Exists(configPath))
+            throw new ArgumentException($"Failed to find {configPath}");
+
+
 
         // set configs
         var configJson = File.ReadAllText(configPath);
         _config = Newtonsoft.Json.JsonConvert.DeserializeObject<Config>(configJson);
 
-        _buildVersion = args.Contains("--useApiVersion") ? GetVersion() : GetNextVersion();
+        if (args.Contains("--version"))
+        {
+            _buildVersion = argList.ElementAtOrDefault(argList.IndexOf("--version") + 1);
+        }
+        else
+        {
+            _buildVersion = args.Contains("--useApiVersion") ? GetVersion() : GetNextVersion();
+        }
 
-        GenService.Execute();
-        return;
 
+
+
+        var genCsService = args.Contains("--genCsService");
+        var genTsService = args.Contains("--genTsService");
+        if (genCsService || genTsService)
+        {
+            GenService.Execute(genCs: genCsService, genTs: genTsService);
+            return;
+        }
 
         // download all json files
         if (args.Contains("--download"))
@@ -102,11 +133,13 @@ public partial class Generator
 
         if (args.Contains("--genCsProcessor"))
         {
+            Console.WriteLine("Uses --genService instead");
             GenCsProcessor.Execute();
         }
 
         if (args.Contains("--genTsProcessor"))
         {
+            Console.WriteLine("Uses --genService instead");
             GenTsProcessor.Execute();
         }
 
@@ -120,7 +153,6 @@ public partial class Generator
         {
             UpdateVersions(BuildVersion);
         }
-
 
     }
 
@@ -157,9 +189,15 @@ public partial class Generator
         // get the current version from model_inheritance.json
         var root = System.IO.Path.GetDirectoryName(rootDir);
         var docDir = System.IO.Path.Combine(root, ".openapi-docs");
+        // not a openapi schema project
+        if (!System.IO.Directory.Exists(docDir))
+            return _buildVersion;
+
         var jsonFile = System.IO.Path.Combine(docDir, "model_inheritance.json");
         if (!File.Exists(jsonFile))
             jsonFile = Directory.GetFiles(docDir, "*_inheritance.json", SearchOption.TopDirectoryOnly).FirstOrDefault();
+        if (!File.Exists(jsonFile))
+            throw new ArgumentException($"Failed to find {jsonFile}");
 
         var modelJson = System.IO.File.ReadAllText(jsonFile);
         var version = JObject.Parse(modelJson)["info"]["version"].ToString();

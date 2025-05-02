@@ -12,6 +12,24 @@ namespace {{ NameSpaceName }}
 
 	public abstract class {{ ClassName }}: ServiceBase
 	{
+        public static string SDKName = "{{NameSpaceName}}";
+        public static string SDKVersion = "{{SDKVersion}}";
+        
+        public static readonly Dictionary<string, string> OperationId = new Dictionary<string, string>
+		{
+            {%- for method in Methods -%}
+            {"{{method.MethodName}}", "{{method.OperationId}}"},
+            {%- endfor -%}
+		};
+
+        protected LicenseService()
+        {
+            {%- for method in Methods %}
+            var delegate_{{method.MethodName}} = ({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.ConstructionParameterCode}}{% endfor %}) => this.{{method.MethodName}}({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.CsParameterName}}{% endfor %});
+            Methods.Add("{{method.OperationId}}", delegate_{{method.MethodName}});
+            {%- endfor -%}
+        }
+
 		{% for method in Methods %} {%- assign skipComma = true %}
 		/// <summary>
 		/// {{method.Document}}

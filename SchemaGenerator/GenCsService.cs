@@ -54,12 +54,6 @@ public class GenCsService : GenProcessorBase
             Helper.Language = TargetLanguage.CSharp;
             var model = new ServiceTemplateModel(service, doc);
 
-            // generate CSharp MessageProcessor
-            var pClassFile = GenProcessorClass(templateDir, model, outputDir);
-            var targetSrcProcessor = System.IO.Path.Combine(srcServiceDir, System.IO.Path.GetFileName(pClassFile));
-            System.IO.File.Copy(pClassFile, targetSrcProcessor, true);
-            Console.WriteLine($"Generated Service is added as {targetSrcProcessor}");
-
 
             // generate Service
             var serviceFile = GenService(templateDir, model, outputDir);
@@ -108,19 +102,12 @@ public class GenCsService : GenProcessorBase
     {
         var templateSource = File.ReadAllText(Path.Combine(templateDir, "MethodName.liquid"), System.Text.Encoding.UTF8);
         var code = Gen(templateSource, model);
-        var file = System.IO.Path.Combine(outputDir, $"{model.ClassName}MethodName{fileExt}");
+        var file = System.IO.Path.Combine(outputDir, $"{model.ClassName}Method{fileExt}");
         System.IO.File.WriteAllText(file, code, System.Text.Encoding.UTF8);
         return file;
     }
 
-    private static string GenProcessorClass(string templateDir, ServiceTemplateModel model, string outputDir, string fileExt = ".cs")
-    {
-        var templateSource = File.ReadAllText(Path.Combine(templateDir, "MessageProcessor.liquid"), System.Text.Encoding.UTF8);
-        var code = Gen(templateSource, model);
-        var file = System.IO.Path.Combine(outputDir, $"{model.ClassName}MessageProcessor{fileExt}");
-        System.IO.File.WriteAllText(file, code, System.Text.Encoding.UTF8);
-        return file;
-    }
+
     private static string GenService(string templateDir, ServiceTemplateModel model, string outputDir)
     {
         var templateSource = File.ReadAllText(Path.Combine(templateDir, "Service.liquid"), System.Text.Encoding.UTF8);

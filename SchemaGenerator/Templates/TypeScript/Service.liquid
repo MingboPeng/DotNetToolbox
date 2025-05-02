@@ -6,69 +6,66 @@ import { {{ Import.Name }} } from "{{ Import.From }}";
 {% endfor -%}
 {% endif -%}
 
-export class InteractionServiceHelper {
-  static SDKName = "{{NameSpaceName}}";
-  static SDKVersion = "{{SDKVersion}}";
+export class {{ClassName}} {
+    static SDKName = "{{NameSpaceName}}";
+    static SDKVersion = "{{SDKVersion}}";
 
-  static OperationId: Record<string, string> = {
-    {%- for method in Methods -%}
-    {{method.MethodName}}: "{{method.OperationId}}",
+    static OperationId: Record<string, string> = {
+        {%- for method in Methods -%}
+        {{method.MethodName}}: "{{method.OperationId}}",
+        {%- endfor -%}
+    };
+
+    // --- Core Invocation Function ---
+{%- for method in Methods -%}
+
+    /**
+    * {{method.Document}}
+    *
+    {%- for param in method.Params -%}
+    * @param {{param.TsParameterName}} {{param.Description}}.
     {%- endfor -%}
-  };
+    * @param timeoutMs Optional timeout in milliseconds. Defaults to DEFAULT_TIMEOUT_MS (30s).
+    *                  Set to 0 or negative to disable timeout.
+    * @returns A Promise of {{method.ReturnTypeName}}.
+    */
+    static async {{method.MethodName}}(
+        { {% for param in method.Params -%}{{param.TsParameterName}}{%if param.HasDefault %} = {{param.DefaultCodeFormat}}{% endif %}, {% endfor %}timeoutMs }: { {% for param in method.Params -%}{{param.TsParameterName}}: {{param.Type}}; {% endfor %}timeoutMs?: number; }
+    ): Promise<{{method.ReturnTypeName}}> {
+        {%- if method.HasParameter -%}
+        const params: any[] = [{% for param in method.Params %}{%- if param.HasDefault == false %}
+            { key: "{{param.TsParameterName}}", value: {{param.TsParameterName}} },{% endif %}{% endfor %}
+        ];
+        {%- for param in method.Params -%}  
+        {%- if param.HasDefault -%}
+        if({{param.TsParameterName}})params.push({ key: "{{param.TsParameterName}}", value: {{param.TsParameterName}} });
+        {%- endif -%}
+        {%- endfor -%}
+        {%- else -%}
+        const params = undefined;
+        {%- endif -%}
+        const request = createRequest("{{method.OperationId}}", params, timeoutMs);
+        const done = await executeCSharp<{{method.ReturnTypeName}}>(request);
+        return done;
+    };
 
+{%- endfor -%}
 }
+
 
 export function createRequest(
-  methodName: string,
-  params?: any[],
-  timeoutMs?: number
+    methodName: string,
+    params?: any[],
+    timeoutMs?: number
 ) {
 
-  const request = {
-    methodName: methodName,
-    args: params,
-    sdkName: InteractionServiceHelper.SDKName,
-    sdkVersion: InteractionServiceHelper.SDKVersion,
-    timeoutMs: timeoutMs
-  };
+    const request = {
+        methodName: methodName,
+        args: params,
+        sdkName: {{ClassName}}.SDKName,
+        sdkVersion: {{ClassName}}.SDKVersion,
+        timeoutMs: timeoutMs
+    };
 
-  return request;
+    return request;
 }
-
-// --- Core Invocation Function ---
-{%- for method in Methods -%}
-interface {{method.MethodName}}Params {
-{%- for param in method.Params -%}
-  {{param.TsParameterName}}: {{param.Type}};
-{%- endfor -%}
-  timeoutMs?: number;
-};
-/**
- * {{method.Document}}
- *
-{%- for param in method.Params -%}
- * @param {{param.TsParameterName}} {{param.Description}}.
-{%- endfor -%}
- * @param timeoutMs Optional timeout in milliseconds. Defaults to DEFAULT_TIMEOUT_MS (30s).
- *                  Set to 0 or negative to disable timeout.
- * @returns A Promise of {{method.ReturnTypeName}}.
- */
-export const {{method.MethodName}} = async ({ {% for param in method.Params -%}{{param.TsParameterName}}{%if param.HasDefault %} = {{param.DefaultCodeFormat}}{% endif %}, {% endfor %}timeoutMs }: {{method.MethodName}}Params): Promise<{{method.ReturnTypeName}}> => {
-  {%- if method.HasParameter -%}
-  const params: any[] = [{% for param in method.Params %}{%- if param.HasDefault == false %}
-    { key: "{{param.TsParameterName}}", value: {{param.TsParameterName}} },{% endif %}{% endfor %}
-  ];
-  {%- for param in method.Params -%}  
-  {%- if param.HasDefault -%}
-  if({{param.TsParameterName}})params.push({ key: "{{param.TsParameterName}}", value: {{param.TsParameterName}} });
-  {%- endif -%}
-  {%- endfor -%}
-  {%- else -%}
-  const params = undefined;
-  {%- endif -%}
-  const request = createRequest("{{method.MethodName}}", params, timeoutMs);
-  const done = await executeCSharp<{{method.ReturnTypeName}}>(request);
-  return done;
-};
-
-{%- endfor -%}
