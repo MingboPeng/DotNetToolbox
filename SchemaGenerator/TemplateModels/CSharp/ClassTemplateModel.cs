@@ -71,6 +71,7 @@ public class ClassTemplateModel : ClassTemplateModelBase
         CsClassName = Helper.CleanName(ClassName);
 
         AllProperties = Properties.DistinctBy(_ => _.PropertyName).OrderByDescending(_ => _.IsRequired).ToList();
+        hasOnlyReadOnly = AllProperties.All(_ => _.IsReadOnly);
     }
 
   

@@ -22,10 +22,10 @@ namespace {{ NameSpaceName }}
             {%- endfor -%}
 		};
 
-        protected LicenseService()
+        protected {{ ClassName }}()
         {
             {%- for method in Methods %}
-            var delegate_{{method.MethodName}} = ({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.ConstructionParameterCode}}{% endfor %}) => this.{{method.MethodName}}({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.CsParameterName}}{% endfor %});
+            var delegate_{{method.MethodName}} = ({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.Type}} {{param.CsParameterName}}{% endfor %}) => this.{{method.MethodName}}({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.CsParameterName}}{% endfor %});
             Methods.Add("{{method.OperationId}}", delegate_{{method.MethodName}});
             {%- endfor -%}
         }

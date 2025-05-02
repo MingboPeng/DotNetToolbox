@@ -44,6 +44,7 @@ public class MethodTemplateModel: MethodTemplateModelBase
     {
         Params = methodInfo.GetParameters().Select(_ => new PropertyTemplateModel(_, document?.Params?.GetValueOrDefault(_.Name))).ToList();
         HasParameter = (Params?.Any()).GetValueOrDefault();
+        
     }
 
 }

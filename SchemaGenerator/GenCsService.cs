@@ -119,7 +119,7 @@ public class GenCsService : GenProcessorBase
 
     private static string GenDTOModels(string templateDir, ClassTemplateModel model, string outputDir)
     {
-        var templateSource = File.ReadAllText(Path.Combine(templateDir, "Class2.liquid"), System.Text.Encoding.UTF8);
+        var templateSource = File.ReadAllText(Path.Combine(templateDir, "ServiceDTO.liquid"), System.Text.Encoding.UTF8);
         var code = Gen(templateSource, model);
         var file = System.IO.Path.Combine(outputDir, $"{model.CsClassName}.cs");
         System.IO.File.WriteAllText(file, code, System.Text.Encoding.UTF8);

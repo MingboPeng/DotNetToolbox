@@ -1,0 +1,160 @@
+﻿/* 
+ * {{ NameSpaceName }}
+ *
+ * Contact: info@ladybug.tools
+ */
+
+extern alias LBTNewtonSoft;
+//using System;
+using System.Linq;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Runtime.Serialization;
+using LBTNewtonSoft::Newtonsoft.Json;
+using LBTNewtonSoft::Newtonsoft.Json.Converters;
+using System.ComponentModel.DataAnnotations;
+{% if HasCsImports -%}
+{% for Package in CsPackages -%}
+using {{ Package }};
+{% endfor -%}
+{% endif -%}
+
+namespace {{ NameSpaceName }}
+{
+	{%- if HasDescription -%}
+    /// <summary>
+    /// {{ Description }}
+    /// </summary>
+	{%- endif -%}
+    [Summary(@"{{ Description }}")]
+    [System.Serializable]
+    [DataContract(Name = "{{ ClassName }}")]
+    public partial class {{ CsClassName }} {% if HasInheritance %}: {{ Inheritance }}{% endif %}
+    {
+    {%- if hasOnlyReadOnly == false -%}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="{{CsClassName}}" /> class.
+        /// </summary>
+        [LBTNewtonSoft.Newtonsoft.Json.JsonConstructorAttribute]
+        [System.Text.Json.Serialization.JsonConstructor]
+        protected {{CsClassName}}() 
+        { 
+            // Set readonly properties with defaultValue
+        {%-  for property in AllProperties -%}
+		    {%- if property.IsReadOnly -%}{%- if property.HasDefault -%}
+            this.{{ property.CsPropertyName }} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};
+            {%- endif -%}{%- endif -%}
+        {%- endfor -%}
+        }
+    {%- endif -%}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="{{ CsClassName }}" /> class.
+        /// </summary>
+	{%-  for property in AllProperties -%}
+        {%- if property.IsReadOnly == false -%}
+        /// <param name="{{ property.CsParameterName }}">{{ property.Description }}</param>
+        {%- endif -%}
+    {%- endfor -%}
+    {%- if hasOnlyReadOnly -%}
+        [LBTNewtonSoft.Newtonsoft.Json.JsonConstructorAttribute]
+        [System.Text.Json.Serialization.JsonConstructor]
+    {%- endif -%}
+        public {{ CsClassName }}
+        (
+            {% assign skipComma = true -%}{% for property in AllProperties -%}{% if property.IsReadOnly == false %}{% if skipComma %}{% assign skipComma = false %}{% else %}, {% endif %}{{ property.ConstructionParameterCode }}{% endif %}{%- endfor %}
+        ){%  if HasInheritance %} : base({% assign skipComma = true %}{% for property in ParentProperties -%}{% if property.IsReadOnly == false %}{% if skipComma %}{% assign skipComma = false %}{% else %}, {% endif %}{{ property.CsParameterName }}: {{ property.CsParameterName }}{% endif %}{%- endfor %}){% endif %}
+        {
+		{%-  for property in Properties -%}
+        {%- if property.IsReadOnly == false -%}
+            {%- if property.IsValueType -%}
+            this.{{ property.CsPropertyName }} = {{ property.CsParameterName }};
+            {%- else -%}
+            this.{{ property.CsPropertyName }} = {{ property.CsParameterName }}{% if property.HasDefault %} ?? {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %}{% elsif property.IsRequired %} ?? throw new System.ArgumentNullException("{{ property.CsParameterName }} is a required property for {{ CsClassName }} and cannot be null"){%- endif -%};
+            {%- endif -%}
+        {%- endif -%}
+		{%- endfor -%}
+
+            // Set readonly properties with defaultValue
+		{%-  for property in AllProperties -%}
+		    {%- if property.IsReadOnly and property.HasDefault -%}
+            this.{{ property.CsPropertyName }} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};
+            {%- endif -%}
+		{%- endfor -%}
+
+        }
+	
+	{%  for property in Properties %}
+        {%- if property.HasVeryLongDefault -%}
+        public static readonly {{ property.Type }} {{ property.CsPropertyName }}Default = {{ property.DefaultCodeFormat }};
+        {%- endif -%}
+        /// <summary>
+        /// {{ property.Description }}
+        /// </summary>
+        [Summary(@"{{ property.Description }}")]{% if property.IsRequired %}
+        [Required]{% endif %}{% if property.HasPattern %}
+        [RegularExpression(@"{{ property.Pattern }}")]{% endif %}{% if property.HasMaximum or property.HasMinimum %}
+        [Range({% if property.HasMinimum %}{{ property.Minimum }}{% else %}{{ property.Type }}.MinValue{% endif %}, {% if property.HasMaximum %}{{ property.Maximum }}{% else %}{{ property.Type }}.MaxValue{% endif %})]{% endif %}{% if property.HasMinLength %}
+        [MinLength({{ property.MinLength }})]{% endif %}{% if property.HasMaxLength %}
+        [MaxLength({{ property.MaxLength }})]{% endif %}
+        [DataMember(Name = "{{ property.CsJsonPropertyNameName }}"{% if property.IsRequired %}, IsRequired = true{% endif %})] // For Newtonsoft.Json
+        [System.Text.Json.Serialization.JsonPropertyName("{{ property.CsJsonPropertyNameName }}")] // For System.Text.Json
+        public {{ property.Type }} {{ property.CsPropertyName }} { get;{% if property.IsReadOnly %} protected{% endif %} set; }{% if property.HasDefault %} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};{% endif %}
+	{%- endfor -%}
+
+
+        /// <summary>
+        /// Returns the string presentation of the object
+        /// </summary>
+        /// <returns>String presentation of the object</returns>
+        public override string ToString()
+        {
+            return "{{ CsClassName }}";
+        }
+
+
+        /// <summary>
+        /// Returns the string presentation of the object
+        /// </summary>
+        /// <returns>String presentation of the object</returns>
+        public {% if HasInheritance %}override{% else %}virtual{% endif %} string ToString(bool detailed)
+        {
+            if (!detailed)
+                return this.ToString();
+            
+            var sb = new StringBuilder();
+            sb.Append("{{ CsClassName }}:\n");
+            {%-  for property in AllProperties -%}
+            sb.Append("  {{ property.CsPropertyName }}: ").Append(this.{{ property.CsPropertyName }}).Append("\n");
+            {%- endfor -%}
+            return sb.ToString();
+        }
+
+
+        /// <summary>
+        /// Returns the object from JSON string
+        /// </summary>
+        /// <returns>{{ CsClassName }} object</returns>
+        public static {{ CsClassName }} FromJson(string json)
+        {
+            var obj = JsonConvert.DeserializeObject<{{ CsClassName }}>(json, JsonSetting.AnyOfConvertSetting);
+            if (obj == null)
+                return null;
+            return obj;
+        }
+
+
+        {%- if HasInheritance  == false -%} 
+        public virtual string ToJson(bool indented = false)
+        {
+            var format = indented ? Formatting.Indented : Formatting.None;
+            return JsonConvert.SerializeObject(this, format, JsonSetting.AnyOfConvertSetting);
+        }
+        {%- endif -%}
+
+
+    }
+}

@@ -266,11 +266,11 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
             }
 
         }
-        else if (propType.ToString() == "Boolean")
+        else if (propType.Name == "Boolean")
         {
             defaultCodeFormat = defaultValue.ToString().ToLower();
         }
-        else if (propType.ToString() == "Double")
+        else if (propType.Name == "Double")
         {
             defaultCodeFormat = $"{defaultValue}D";
         }
