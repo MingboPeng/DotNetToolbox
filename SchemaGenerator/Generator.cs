@@ -96,7 +96,8 @@ public partial class Generator
 
         if (args.Contains("--version"))
         {
-            _buildVersion = argList.ElementAtOrDefault(argList.IndexOf("--version") + 1);
+            var v = argList.ElementAtOrDefault(argList.IndexOf("--version") + 1);
+            _buildVersion = (v?.StartsWith("--")).GetValueOrDefault() ? _buildVersion : v;
         }
         else
         {
@@ -111,7 +112,7 @@ public partial class Generator
         if (genCsService || genTsService)
         {
             GenService.Execute(genCs: genCsService, genTs: genTsService);
-            return;
+            //return;
         }
 
         // download all json files
