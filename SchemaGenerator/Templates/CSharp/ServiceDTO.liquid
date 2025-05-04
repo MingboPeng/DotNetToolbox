@@ -134,8 +134,7 @@ namespace {{ NameSpaceName }}
         /// <returns>{{ CsClassName }} object</returns>
         public static {{ CsClassName }} FromJson(string json)
         {
-            var options = new JsonSerializerOptions { /* Configure options as needed */ }; 
-            var obj = JsonSerializer.Deserialize<{{ CsClassName }}>(json, options);
+            var obj = JsonSerializer.Deserialize<{{ CsClassName }}>(json, JsonSetting.SerializerOptions);
             return obj;
         }
 
