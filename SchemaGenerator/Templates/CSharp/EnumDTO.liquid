@@ -1,0 +1,27 @@
+﻿/* 
+ * {{ NameSpaceName }}
+ *
+ * Contact: info@ladybug.tools
+ */
+
+ using System.Runtime.Serialization;
+ using System.Text.Json;
+ using System.Text.Json.Serialization;
+ 
+namespace {{ NameSpaceName }}
+{
+	{%- if HasDescription -%}
+    /// <summary>
+    /// {{ Description }}
+    /// </summary>
+	{%- endif -%}
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum {{ EnumName }}{%- if HasExtendedValueRange %} : long{% endif %}
+    {
+    {%- for enum in EnumItems %}
+        [EnumMember(Value = "{{ enum.Value }}")]
+        {{ enum.Key }} = {{ enum.Index }},
+    {%- endfor %}
+    }
+ 
+}

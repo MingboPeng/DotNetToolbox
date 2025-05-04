@@ -4,7 +4,6 @@
  * Contact: info@ladybug.tools
  */
 
-extern alias LBTNewtonSoft;
 //using System;
 using System.Linq;
 using System.IO;
@@ -14,9 +13,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
-using LBTNewtonSoft::Newtonsoft.Json;
-using LBTNewtonSoft::Newtonsoft.Json.Converters;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 {% if HasCsImports -%}
 {% for Package in CsPackages -%}
 using {{ Package }};
@@ -31,15 +30,12 @@ namespace {{ NameSpaceName }}
     /// </summary>
 	{%- endif -%}
     [Summary(@"{{ Description }}")]
-    [System.Serializable]
-    [DataContract(Name = "{{ ClassName }}")]
     public partial class {{ CsClassName }} {% if HasInheritance %}: {{ Inheritance }}{% endif %}
     {
     {%- if hasOnlyReadOnly == false -%}
         /// <summary>
         /// Initializes a new instance of the <see cref="{{CsClassName}}" /> class.
         /// </summary>
-        [LBTNewtonSoft.Newtonsoft.Json.JsonConstructorAttribute]
         [System.Text.Json.Serialization.JsonConstructor]
         protected {{CsClassName}}() 
         { 
@@ -60,7 +56,6 @@ namespace {{ NameSpaceName }}
         {%- endif -%}
     {%- endfor -%}
     {%- if hasOnlyReadOnly -%}
-        [LBTNewtonSoft.Newtonsoft.Json.JsonConstructorAttribute]
         [System.Text.Json.Serialization.JsonConstructor]
     {%- endif -%}
         public {{ CsClassName }}
@@ -100,8 +95,7 @@ namespace {{ NameSpaceName }}
         [Range({% if property.HasMinimum %}{{ property.Minimum }}{% else %}{{ property.Type }}.MinValue{% endif %}, {% if property.HasMaximum %}{{ property.Maximum }}{% else %}{{ property.Type }}.MaxValue{% endif %})]{% endif %}{% if property.HasMinLength %}
         [MinLength({{ property.MinLength }})]{% endif %}{% if property.HasMaxLength %}
         [MaxLength({{ property.MaxLength }})]{% endif %}
-        [DataMember(Name = "{{ property.CsJsonPropertyNameName }}"{% if property.IsRequired %}, IsRequired = true{% endif %})] // For Newtonsoft.Json
-        [System.Text.Json.Serialization.JsonPropertyName("{{ property.CsJsonPropertyNameName }}")] // For System.Text.Json
+        [JsonPropertyName("{{ property.CsJsonPropertyNameName }}")] // System.Text.Json
         public {{ property.Type }} {{ property.CsPropertyName }} { get;{% if property.IsReadOnly %} protected{% endif %} set; }{% if property.HasDefault %} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};{% endif %}
 	{%- endfor -%}
 
@@ -140,9 +134,8 @@ namespace {{ NameSpaceName }}
         /// <returns>{{ CsClassName }} object</returns>
         public static {{ CsClassName }} FromJson(string json)
         {
-            var obj = JsonConvert.DeserializeObject<{{ CsClassName }}>(json, JsonSetting.AnyOfConvertSetting);
-            if (obj == null)
-                return null;
+            var options = new JsonSerializerOptions { /* Configure options as needed */ }; 
+            var obj = JsonSerializer.Deserialize<{{ CsClassName }}>(json, options);
             return obj;
         }
 
@@ -150,8 +143,10 @@ namespace {{ NameSpaceName }}
         {%- if HasInheritance  == false -%} 
         public virtual string ToJson(bool indented = false)
         {
-            var format = indented ? Formatting.Indented : Formatting.None;
-            return JsonConvert.SerializeObject(this, format, JsonSetting.AnyOfConvertSetting);
+            var options = JsonSetting.SerializerOptions;
+            if (indented)
+                options.WriteIndented = true;
+            return JsonSerializer.Serialize(this, GetType(), options);
         }
         {%- endif -%}
 
