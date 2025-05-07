@@ -86,10 +86,14 @@ namespace TemplateModels
                                           .Select(_ => CheckTypeName(_))
                                           .ToArray();
 
-            // AnyOf in TypeScript: (T1 | T2)
-            if (Language == TargetLanguage.TypeScript && typeName == "AnyOf")
+            
+            if (Language == TargetLanguage.TypeScript)
             {
-                return $"({string.Join(" | ", typeArguments)})";
+                // AnyOf in TypeScript: (T1 | T2)
+                if (typeName == "AnyOf")
+                {
+                    return $"({string.Join(" | ", typeArguments)})";
+                }
             }
 
             return $"{typeName}<{string.Join(", ", typeArguments)}>";
@@ -148,7 +152,9 @@ namespace TemplateModels
                 { "Void", "void" },
                 { "Task", "Promise" },
                 { "Dictionary", "Map" },
+                { "IDictionary", "Map" },
                 { "List", "Array" },
+                { "IList", "Array" },
                 { "DateTime", "Date" }
             };
 
