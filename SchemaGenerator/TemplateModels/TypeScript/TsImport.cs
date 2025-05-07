@@ -18,7 +18,7 @@ public class TsImport
         {
             From = $"./{Name}";
         }
-        else if (From.StartsWith(SchemaGenerator.Generator.moduleName))
+        else if (From.StartsWith(SchemaGenerator.Generator.moduleName ?? "DTO"))
         {
             From = $"./{Name}";
         }

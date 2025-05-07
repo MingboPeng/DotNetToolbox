@@ -22,7 +22,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
 
 
 
-    public List<string> TsImports { get; set; } = new List<string>();
+    public List<TsImport> TsImports { get; set; } = new List<TsImport>();
     public bool HasTsImports => TsImports.Any();
 
 
@@ -71,19 +71,19 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         TsParameterName = Helper.CleanParameterName(PropertyName);
         Description = String.IsNullOrEmpty(document) ? TsParameterName : document;
 
-        //var thisAssembly = parameterInfo.ParameterType.Assembly;
-        TsImports =
-            Helper.GetTypes(parameterInfo.ParameterType)
-            .Where(_ => _.Namespace == "DTO")
-            .Select(t => t.Name)?
-            .Distinct()?
-            .ToList() ?? new List<string>();
+        var typeUsed = Helper.GetTypes(parameterInfo.ParameterType);
+        TsImports = typeUsed.Select(_ => new TsImport(_.Name, _.Namespace)).Distinct()?
+            .ToList() ?? new List<TsImport>();
 
-  
+        IsEnumType = parameterInfo.ParameterType.IsEnum;
+        IsValueType = parameterInfo.ParameterType.IsValueType;
+
     }
 
     public PropertyTemplateModel(PropertyInfo propertyInfo, System.Xml.Linq.XDocument xmlDoc) : base(propertyInfo, xmlDoc)
     {
+        //this.Type = GetTypeScriptType(propertyInfo.PropertyType, AddTsImportTypes);
+
         // get default value for property for the current client
         if (this.HasDefault)
             DefaultCodeFormat = ConvertTsDefaultValue(propertyInfo.PropertyType, this.Default);
@@ -92,21 +92,21 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         TsPropertyName = TsParameterName; // make it camelCase
         Description = String.IsNullOrEmpty(Description) ? TsParameterName : Description;
 
-        TsImports =
-           Helper.GetTypes(propertyInfo.PropertyType)
-           .Where(_ => _.Namespace == "DTO")
-           .Select(t => t.Name)?
-           .Distinct()?
-           .ToList() ?? new List<string>();
-
+        var typeUsed = Helper.GetTypes(propertyInfo.PropertyType);
+        TsImports = typeUsed.Select(_ => new TsImport(_.Name, _.Namespace)).Distinct()?
+            .ToList() ?? new List<TsImport>();
 
         ConvertToJavaScriptCode = $"data[\"{TsPropertyName}\"] = this.{TsPropertyName};";
         ConvertToClassCode = $"this.{TsPropertyName} = obj.{TsPropertyName};";
         //validation decorators
         ValidationDecorators = GetValidationDecorators(propertyInfo.PropertyType);
 
+
+        IsEnumType = propertyInfo.PropertyType.IsEnum;
+        IsValueType = propertyInfo.PropertyType.IsValueType;
+
         // get @Transform
-        //TransformDecorator = GetTransform(json, false);
+        TransformDecorator = GetTransform(propertyInfo.PropertyType, false);
     }
 
     public static string GetTransform(JsonSchema json, bool isArray)
@@ -139,6 +139,48 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
             if (string.IsNullOrEmpty(itemCode))
                 return code;
             code = $@"@Transform(({{ value }}) => value.map((item: any) => {{
+{itemCode}
+    }}))";
+            return code;
+        }
+        else
+        {
+            return code;
+        }
+
+    }
+
+    public static string GetTransform(Type tp, bool isArray)
+    {
+        var code = string.Empty;
+        if (tp.IsAnyOf())
+        {
+            var allTps = Helper.GetTypes(tp);
+            var allRefs = allTps.All(_=> !_.IsValueType && _ != typeof(string));
+            if (!allRefs)
+                return code;
+
+            var refTypes = allTps.Select(r => r.Name).ToList();
+
+            var tps = refTypes.Select(_ => $"if (item?.type === '{_}') return {_}.fromJS(item);").ToList();
+            tps = tps.Take(1).Concat(tps.Skip(1).Select(_ => $"else {_}")).ToList();
+            tps.Add("else return item;");
+            tps = tps.Select(_ => $"      {_}").ToList();
+
+            var trans = string.Join(Environment.NewLine, tps);
+            code = $@"@Transform(({{ value }}: {{ value: any }}) => {{
+      const item = value;
+{trans}
+    }})";
+            return isArray ? trans : code;
+        }
+        else if (tp.IsArray())
+        {
+            var arrayItem = tp.GetGenericArguments()[0];
+            var itemCode = GetTransform(arrayItem, true);
+            if (string.IsNullOrEmpty(itemCode))
+                return code;
+            code = $@"@Transform(({{ value }}: {{ value: any }}) => value.map((item: any) => {{
 {itemCode}
     }}))";
             return code;
@@ -259,18 +301,14 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         if (!isValueType)
         {
             var refPropType = propType;
-            if (type.IsEnum)
-            {
-                result.Add(isArrayItem ? $"@IsEnum({refPropType}, {{ each: true }})" : $"@IsEnum({refPropType})");
-                result.Add($"@Type(() => String)");
-            }
-            else
-            {
-                result.Add(isArrayItem ? $"@IsInstance({refPropType}, {{ each: true }})" : $"@IsInstance({refPropType})");
-                result.Add($"@Type(() => {refPropType})");
-                result.Add(isArrayItem ? "@ValidateNested({ each: true })" : "@ValidateNested()");
-            }
-
+            result.Add(isArrayItem ? $"@IsInstance({refPropType}, {{ each: true }})" : $"@IsInstance({refPropType})");
+            result.Add($"@Type(() => {refPropType})");
+            result.Add(isArrayItem ? "@ValidateNested({ each: true })" : "@ValidateNested()");
+        }
+        else if (type.IsEnum)
+        {
+            result.Add(isArrayItem ? $"@IsEnum({propType}, {{ each: true }})" : $"@IsEnum({propType})");
+            result.Add($"@Type(() => String)");
         }
         else if (type == typeof(int) || type == typeof(long) || type == typeof(short) || type == typeof(byte)) // number
         {
@@ -298,8 +336,6 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         }
         else
         {
-            result.Add($"@IsTypee {type.Name}");
-
             //result.Add($"@IsObject()");
         }
 
@@ -309,7 +345,11 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public List<string> GetValidationDecorators(Type type)
     {
         var result = new List<string>();
-        if (this.IsArray)
+        if (type.IsAnyOf())
+        {
+            // no validation deco
+        }
+        else if (this.IsArray)
         {
             result.Add("@IsArray()");
             var arrayItem = type.GetGenericArguments()[0];
@@ -512,7 +552,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     {
         if (type == Type)
             return;
-        TsImports.Add(type);
+        TsImports.Add(new TsImport(type, null));
     }
 
     private static string ConvertTsDefaultValue(Type propType, object defaultV)

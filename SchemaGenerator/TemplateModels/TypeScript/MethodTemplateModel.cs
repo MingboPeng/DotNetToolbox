@@ -11,7 +11,7 @@ public class MethodTemplateModel: MethodTemplateModelBase
     public PropertyTemplateModel ReturnType { get; set; }
     public List<PropertyTemplateModel> Params { get; set; }
 
-    public List<string> TsImports { get; set; } = new List<string>();
+    public List<TsImport> TsImports { get; set; } = new List<TsImport>();
 
 
 
@@ -24,7 +24,7 @@ public class MethodTemplateModel: MethodTemplateModelBase
             .ToList() ?? new List<PropertyTemplateModel>();
         
         HasParameter = (Params?.Any()).GetValueOrDefault();
-        var allTsImports = Params?.SelectMany(_ => _.TsImports)?.ToList() ?? new List<string>();
+        var allTsImports = Params?.SelectMany(_ => _.TsImports)?.ToList() ?? new List<TsImport>();
 
         var returnObj = operation.Responses["200"]?.Content?.FirstOrDefault().Value?.Schema; // Successful Response
         ReturnType = new PropertyTemplateModel(name, returnObj, false, false);
@@ -53,7 +53,7 @@ public class MethodTemplateModel: MethodTemplateModelBase
         Params = methodInfo.GetParameters().Select(_ => new PropertyTemplateModel(_, document?.Params?.GetValueOrDefault(_.Name))).ToList();
         HasParameter = (Params?.Any()).GetValueOrDefault();
 
-        var allTsImports = Params?.SelectMany(_ => _.TsImports)?.ToList() ?? new List<string>();
+        var allTsImports = Params?.SelectMany(_ => _.TsImports)?.ToList() ?? new List<TsImport>();
 
         if (this.HasReturn)
         {

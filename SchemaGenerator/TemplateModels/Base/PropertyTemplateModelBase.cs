@@ -68,6 +68,9 @@ public class PropertyTemplateModelBase
         this.Type = Helper.GetCheckTypeName(parameterInfo.ParameterType);
         this.PropertyName = parameterInfo.Name;
 
+        // is AnyOf
+        this.IsAnyOf = (parameterInfo.ParameterType?.BaseType?.IsAnyOf()).GetValueOrDefault();
+
         // get default attribute
         if (parameterInfo.DefaultValue != DBNull.Value)
             this.Default = parameterInfo.DefaultValue;
@@ -76,8 +79,7 @@ public class PropertyTemplateModelBase
         this.IsRequired = !parameterInfo.IsOptional;
 
         // IsArray or List
-        bool isEnumerable = typeof(IEnumerable).IsAssignableFrom(parameterInfo.ParameterType);
-        IsArray = isEnumerable && parameterInfo.ParameterType != typeof(string);
+        IsArray = parameterInfo.ParameterType.IsArray();
 
         //get external using/import packages
         var rTypes = Helper.GetTypes(parameterInfo.ParameterType)
@@ -93,6 +95,9 @@ public class PropertyTemplateModelBase
         this.Type = Helper.GetCheckTypeName(propertyInfo.PropertyType);
         this.PropertyName = propertyInfo.Name;
 
+        // is AnyOf
+        this.IsAnyOf = (propertyInfo.PropertyType?.BaseType?.IsAnyOf()).GetValueOrDefault();
+
         // get default attribute
         var defaultAtt = propertyInfo.GetCustomAttribute<DefaultValueAttribute>(true);
         if (defaultAtt != null)
@@ -107,8 +112,7 @@ public class PropertyTemplateModelBase
         this.Description = GetPropertyDoc(propertyInfo, xmlDoc);
 
         // IsArray or List
-        bool isEnumerable = typeof(IEnumerable).IsAssignableFrom(propertyInfo.PropertyType);
-        IsArray = isEnumerable && propertyInfo.PropertyType != typeof(string);
+        IsArray = propertyInfo.PropertyType.IsArray();
 
         // IsReadyOnly
         this.IsReadOnly = !propertyInfo.CanWrite;

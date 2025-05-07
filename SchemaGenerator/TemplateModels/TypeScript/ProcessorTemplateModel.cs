@@ -27,7 +27,7 @@ public class ProcessorTemplateModel
 
         ClassName = processorName;
         Methods = doc.Paths.Select(_ => new MethodTemplateModel(_.Key, _.Value))?.Where(_ => !string.IsNullOrEmpty(_.MethodName))?.ToList();
-        var tsImports = Methods?.SelectMany(_ => _.TsImports)?.Distinct().Select(_ => new TsImport(_, from: mapper.TryGetModule(_)))?.ToList() ?? new List<TsImport>();
+        var tsImports = Methods?.SelectMany(_ => _.TsImports)?.Distinct().Select(_ => new TsImport(_.Name, from: mapper.TryGetModule(_.From ?? _.Name)))?.ToList() ?? new List<TsImport>();
         // remove importing self
         tsImports = tsImports.Where(_ => _.Name != ClassName).ToList();
         // remove duplicates

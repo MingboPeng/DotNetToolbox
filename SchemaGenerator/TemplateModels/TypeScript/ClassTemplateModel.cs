@@ -35,7 +35,7 @@ public class ClassTemplateModel : ClassTemplateModelBase
 
         IsAbstract = DerivedClasses.Any() && InheritedSchema == null;
 
-        TsImports = Properties.SelectMany(_ => _.TsImports).Select(_ => new TsImport(_, from: mapper.TryGetModule(_))).ToList();
+        TsImports = Properties.SelectMany(_ => _.TsImports).Select(_ => new TsImport(_.Name, from: mapper.TryGetModule(_.From ?? _.Name))).ToList();
 
         // add base class reference
         if (!string.IsNullOrEmpty(Inheritance))
@@ -71,9 +71,17 @@ public class ClassTemplateModel : ClassTemplateModelBase
         Properties = classType.GetProperties().Select(_ => new PropertyTemplateModel(_, xmlDoc)).ToList();
         //ClassName = Helper.CleanName(ClassName);
 
-        var tsImports = Properties?.SelectMany(_ => _.TsImports)?.Distinct().Select(_ => new TsImport(_, from: null))?.ToList() ?? new List<TsImport>();
+        TsImports = Properties?.SelectMany(_ => _.TsImports)?.Distinct()?.ToList() ?? new List<TsImport>();
+
+        // add base class reference
+        if (!string.IsNullOrEmpty(Inheritance))
+            TsImports.Add(new TsImport(Inheritance, from: null));
+
         // remove importing self
-        tsImports = tsImports.Where(_ => _.Name != ClassName).ToList();
+        var tsImports = TsImports.Where(_ => _.Name != ClassName).ToList();
+        // remove importing System for String/ Double
+        tsImports = tsImports.Where(_ => _.From != "System").ToList();
+
         // remove duplicates
         TsImports = tsImports.GroupBy(_ => _.Name).Select(_ => _.First()).OrderBy(_ => _.Name).ToList();
 

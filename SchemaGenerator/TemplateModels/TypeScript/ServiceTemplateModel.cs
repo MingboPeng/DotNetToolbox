@@ -34,7 +34,7 @@ public class ServiceTemplateModel : TemplateModels.Base.ServiceTemplateModelBase
         Methods.ForEach(_ => _.OperationId = $"{ClassName}.{_.MethodName}");
 
 
-        var tsImports = Methods?.SelectMany(_ => _.TsImports)?.Distinct().Select(_ => new TsImport(_, from: null))?.ToList() ?? new List<TsImport>();
+        var tsImports = Methods?.SelectMany(_ => _.TsImports)?.Distinct()?.ToList() ?? new List<TsImport>();
         // remove importing self
         tsImports = tsImports.Where(_ => _.Name != ClassName).ToList();
         // remove duplicates

@@ -25,7 +25,7 @@ export {% if IsAbstract %}abstract {% endif %}class {{ ClassName }}{% if HasInhe
 {%  if property.HasDescription -%}
     /** {{ property.Description }} */
 {%  endif -%}
-    {{ property.TsPropertyName }}{% if property.IsRequired %}!{% else %}?{% endif %}: {{ property.Type }}{{ property.TypePostfix }};
+    {{ property.TsPropertyName }}{% if property.HasDefault == false %}{% if property.IsRequired %}!{% else %}?{% endif %}{% endif %}: {{ property.Type }}{{ property.TypePostfix }}{% if property.HasDefault %} = {{ property.DefaultCodeFormat | strip | tab }}{% endif -%};
 	
 {% endfor -%}
 

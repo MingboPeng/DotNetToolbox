@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,8 +16,20 @@ namespace TemplateModels
         TypeScript
     }
 
-    public class Helper
+    public static class Helper
     {
+        public static bool IsAnyOf(this Type type)
+        {
+            return type?.BaseType?.Name == "AnyOf";
+        }
+
+        public static bool IsArray(this Type type) {
+
+            bool isEnumerable = typeof(IEnumerable).IsAssignableFrom(type);
+            var IsArray = isEnumerable && type != typeof(string);
+            return IsArray;
+        }
+
         /// <summary>
         /// Get all related type, this is useful for Array or List with its ElementType and GenericArguments
         /// </summary>
@@ -72,6 +85,12 @@ namespace TemplateModels
                                           .Select(_ => GetCheckTypeName(_))
                                           .Select(_ => CheckTypeName(_))
                                           .ToArray();
+
+            // AnyOf in TypeScript: (T1 | T2)
+            if (Language == TargetLanguage.TypeScript && typeName == "AnyOf")
+            {
+                return $"({string.Join(" | ", typeArguments)})";
+            }
 
             return $"{typeName}<{string.Join(", ", typeArguments)}>";
         }

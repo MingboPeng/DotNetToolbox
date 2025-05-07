@@ -112,7 +112,7 @@ public partial class Generator
         if (genCsService || genTsService)
         {
             GenService.Execute(genCs: genCsService, genTs: genTsService);
-            //return;
+            return;
         }
 
         // download all json files
