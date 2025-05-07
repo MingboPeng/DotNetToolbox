@@ -30,7 +30,7 @@ export class {{ClassName}} {
     * @returns A Promise of {{method.ReturnTypeName}}.
     */
     static async {{method.MethodName}}(
-        { {% for param in method.Params -%}{{param.TsParameterName}}{%if param.HasDefault %} = {{param.DefaultCodeFormat}}{% endif %}, {% endfor %}timeoutMs }: { {% for param in method.Params -%}{{param.TsParameterName}}: {{param.Type}}; {% endfor %}timeoutMs?: number; }
+        { {% for param in method.Params -%}{{param.TsParameterName}}{%if param.IsRequired == false %} = {%if param.HasDefault %}{{param.DefaultCodeFormat}}{% else %}undefined{% endif %}{% endif %}, {% endfor %}timeoutMs = undefined }: { {% for param in method.Params -%}{{param.TsParameterName}}{% if param.IsRequired == false %}?{% endif %}: {{param.Type}}; {% endfor %}timeoutMs?: number; }
     ): Promise<{{method.ReturnTypeName}}> {
         {%- if method.HasParameter -%}
         const params: any[] = [{% for param in method.Params %}{%- if param.HasDefault == false %}
