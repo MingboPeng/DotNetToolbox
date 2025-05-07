@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 namespace TemplateModels.TypeScript;
 
 public class TsImport
@@ -22,6 +23,10 @@ public class TsImport
         {
             From = $"./{Name}";
         }
+        else if (MODULEMAPPER.TryGetValue(From, out var newFrom))
+        {
+            From = newFrom;
+        }
         else
         {
             // clean From
@@ -29,6 +34,13 @@ public class TsImport
         }
 
 
-
     }
+
+    private static Dictionary<string, string> MODULEMAPPER = new Dictionary<string, string>
+    {
+        {"DragonflySchema", "dragonfly-schema" },
+        {"HoneybeeSchema", "honeybee-schema" }
+    };
+
+
 }

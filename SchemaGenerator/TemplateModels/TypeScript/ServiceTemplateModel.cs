@@ -37,6 +37,8 @@ public class ServiceTemplateModel : TemplateModels.Base.ServiceTemplateModelBase
         var tsImports = Methods?.SelectMany(_ => _.TsImports)?.Distinct()?.ToList() ?? new List<TsImport>();
         // remove importing self
         tsImports = tsImports.Where(_ => _.Name != ClassName).ToList();
+        // remove importing System for String/ Double
+        tsImports = tsImports.Where(_ => _.From != "System").ToList();
         // remove duplicates
         TsImports = tsImports.GroupBy(_ => _.Name).Select(_ => _.First()).OrderBy(_ => _.Name).ToList();
 
