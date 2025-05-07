@@ -42,6 +42,9 @@ public class PropertyTemplateModelBase
     public int? MinLength { get; set; }
     public bool HasMinLength => MinLength.HasValue;
 
+    public List<string> ExternalPackageNames { get; set; } = new List<string>();
+    public bool IsExternalPackage => (ExternalPackageNames?.Any()).GetValueOrDefault();
+
     public PropertyTemplateModelBase(string name, JsonSchemaProperty json): this(name, json, json.IsRequired, json.IsReadOnly)
     {
     }
@@ -76,7 +79,12 @@ public class PropertyTemplateModelBase
         bool isEnumerable = typeof(IEnumerable).IsAssignableFrom(parameterInfo.ParameterType);
         IsArray = isEnumerable && parameterInfo.ParameterType != typeof(string);
 
-   
+        //get external using/import packages
+        var rTypes = Helper.GetTypes(parameterInfo.ParameterType)
+            .Where(_ => _.Namespace != "DTO"); //external package
+        var packages = rTypes.Select(_ => _.Namespace);
+
+        ExternalPackageNames.AddRange(packages);
 
     }
 
@@ -105,6 +113,12 @@ public class PropertyTemplateModelBase
         // IsReadyOnly
         this.IsReadOnly = !propertyInfo.CanWrite;
 
+        //get external using/import packages
+        var rTypes = Helper.GetTypes(propertyInfo.PropertyType)
+            .Where(_ => _.Namespace != "DTO"); //external package
+        var packages = rTypes.Select(_ => _.Namespace);
+
+        ExternalPackageNames.AddRange(packages);
     }
 
 

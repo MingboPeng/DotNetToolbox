@@ -20,7 +20,7 @@ public class ServiceTemplateModel: TemplateModels.Base.ServiceTemplateModelBase
 
     public List<string> CsImports { get; set; } = new List<string>(); // other NuGet packages
     public List<string> CsPackages => CsImports;
-    public bool HasCsImports => CsPackages.Any();
+    public bool HasCsImports => CsImports.Any();
 
     public ServiceTemplateModel(Type classType, System.Xml.Linq.XDocument xmlDoc)
     {
@@ -32,6 +32,7 @@ public class ServiceTemplateModel: TemplateModels.Base.ServiceTemplateModelBase
         // OperationId for each methods have to be kept same between C# and Ts
         Methods.ForEach(_ => _.OperationId = $"{ClassName}.{_.MethodName}");
 
+        CsImports = Methods.SelectMany(_ => _.UsingPackages).Order().Distinct().Reverse().ToList();
     }
 
 }

@@ -6,13 +6,13 @@ using TemplateModels.Base;
 
 namespace TemplateModels.CSharp;
 
-public class MethodTemplateModel: MethodTemplateModelBase
+public class MethodTemplateModel : MethodTemplateModelBase
 {
     public PropertyTemplateModel ReturnType { get; set; }
     public List<PropertyTemplateModel> Params { get; set; }
-  
 
-    public MethodTemplateModel(string pathName, OpenApiPathItem openApi):base(pathName, openApi)
+
+    public MethodTemplateModel(string pathName, OpenApiPathItem openApi) : base(pathName, openApi)
     {
         var operation = openApi.First().Value;
 
@@ -40,11 +40,13 @@ public class MethodTemplateModel: MethodTemplateModelBase
     }
 
 
-    public MethodTemplateModel(MethodInfo methodInfo, MethodDoc document = default):base(methodInfo, document)
+    public MethodTemplateModel(MethodInfo methodInfo, MethodDoc document = default) : base(methodInfo, document)
     {
         Params = methodInfo.GetParameters().Select(_ => new PropertyTemplateModel(_, document?.Params?.GetValueOrDefault(_.Name))).ToList();
         HasParameter = (Params?.Any()).GetValueOrDefault();
-        
+
+        var paramTypePackages = Params.SelectMany(_ => _.ExternalPackageNames).ToList();
+        this.UsingPackages.AddRange(paramTypePackages);
     }
 
 }

@@ -67,11 +67,14 @@ public class ClassTemplateModel : ClassTemplateModelBase
 
     public ClassTemplateModel(Type classType, System.Xml.Linq.XDocument xmlDoc): base(classType, xmlDoc)
     {
+        
         Properties = classType.GetProperties().Select(_ => new PropertyTemplateModel(_, xmlDoc)).ToList();
         CsClassName = Helper.CleanName(ClassName);
 
         AllProperties = Properties.DistinctBy(_ => _.PropertyName).OrderByDescending(_ => _.IsRequired).ToList();
         hasOnlyReadOnly = AllProperties.All(_ => _.IsReadOnly);
+
+        CsImports = Properties.SelectMany(_ => _.ExternalPackageNames).Order().Distinct().Reverse().ToList();
     }
 
   

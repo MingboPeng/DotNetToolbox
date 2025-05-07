@@ -19,6 +19,8 @@ public class MethodTemplateModelBase
     public string Document { get; set; }
 
     public string ReturnTypeName { get; set; }
+    public List<string> UsingPackages { get; set; } = new List<string>(); //Using packages/ import packages
+
     // void or type name
     //public PropertyTemplateModelBase ReturnType { get; set; }
     //public List<PropertyTemplateModelBase> Params { get; set; }
@@ -56,6 +58,13 @@ public class MethodTemplateModelBase
 
         Document = document?.Summary;
         ReturnDoc = document?.Returns;
+
+        //get external using/import packages
+        var rTypes = Helper.GetTypes(methodInfo.ReturnParameter.ParameterType)
+            .Where(_ => _.Namespace != "DTO"); //external package
+        var packages = rTypes.Select(_ => _.Namespace);
+
+        UsingPackages.AddRange(packages);
 
     }
 
