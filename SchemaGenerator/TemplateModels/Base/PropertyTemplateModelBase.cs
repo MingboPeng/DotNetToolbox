@@ -45,7 +45,7 @@ public class PropertyTemplateModelBase
     public List<string> ExternalPackageNames { get; set; } = new List<string>();
     public bool IsExternalPackage => (ExternalPackageNames?.Any()).GetValueOrDefault();
 
-    public PropertyTemplateModelBase(string name, JsonSchemaProperty json): this(name, json, json.IsRequired, json.IsReadOnly)
+    public PropertyTemplateModelBase(string name, JsonSchemaProperty json) : this(name, json, json.IsRequired, json.IsReadOnly)
     {
     }
 

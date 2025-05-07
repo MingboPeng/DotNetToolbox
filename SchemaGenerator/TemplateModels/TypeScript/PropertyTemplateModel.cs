@@ -43,7 +43,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         DefaultCodeFormat = ConvertTsDefaultValue(json);
 
         // check types
-        Type = GetTypeScriptType(json, AddTsImportTypes);
+        this.Type = GetTypeScriptType(json, AddTsImportTypes);
 
         PropertyName = string.IsNullOrEmpty(PropertyName) ? this.Type : PropertyName;
         TsParameterName = Helper.CleanParameterName(PropertyName);
@@ -156,7 +156,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         if (tp.IsAnyOf())
         {
             var allTps = Helper.GetTypes(tp);
-            var allRefs = allTps.All(_=> !_.IsValueType && _ != typeof(string));
+            var allRefs = allTps.All(_ => !_.IsValueType && _ != typeof(string));
             if (!allRefs)
                 return code;
 
@@ -573,7 +573,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
             }
 
         }
-        else if (propType.ToString() == "Boolean")
+        else if (propType.Name == "Boolean")
         {
             defaultCodeFormat = defaultValue.ToString().ToLower();
         }
