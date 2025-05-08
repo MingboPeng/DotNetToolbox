@@ -46,7 +46,12 @@ export class {{ClassName}} {
         {%- endif -%}
         const request = createRequest("{{method.OperationId}}", params, timeoutMs);
         const done = await executeCSharp<{{method.ReturnTypeName}}>(request);
+        {%- if method.IsReturnTypeMap -%}
+        const data = convertTo{{method.ReturnTypeName}}(done);
+        return data;
+        {%- else -%}
         return done;
+        {%- endif -%}
     };
 
 {%- endfor -%}
@@ -68,4 +73,8 @@ export function createRequest(
     };
 
     return request;
+}
+
+function convertToMap<K, V>(data: any): Map<K, V> {
+    return new Map(Object.entries(data) as [K, V][]);
 }

@@ -12,7 +12,7 @@ public class MethodTemplateModel: MethodTemplateModelBase
     public List<PropertyTemplateModel> Params { get; set; }
 
     public List<TsImport> TsImports { get; set; } = new List<TsImport>();
-
+    public bool IsReturnTypeMap => this.ReturnTypeName.StartsWith("Map<");
 
 
     public MethodTemplateModel(string name, OpenApiPathItem openApi):base(name, openApi)
