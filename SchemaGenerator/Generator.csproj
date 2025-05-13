@@ -15,12 +15,8 @@
 	<ItemGroup>
 		<PackageReference Include="Fluid.Core" Version="2.10.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
-		<PackageReference Include="NJsonSchema.NewtonsoftJson" Version="11.0.1" />
 		<PackageReference Include="NSwag.CodeGeneration.CSharp" Version="14.0.7" />
 		<PackageReference Include="NSwag.CodeGeneration.TypeScript" Version="14.0.7" />
-		<PackageReference Include="LBT.Newtonsoft.Json" Version="12.0.3.23910" IncludeAssets="compile;build">
-			<Aliases>LBTNewtonsoft</Aliases>
-		</PackageReference>
 	</ItemGroup>
 
 </Project>
