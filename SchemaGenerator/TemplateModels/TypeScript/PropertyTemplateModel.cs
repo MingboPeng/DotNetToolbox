@@ -561,17 +561,15 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         var defaultCodeFormat = string.Empty;
         if (defaultValue == null) return defaultCodeFormat;
 
-        if (defaultValue is string)
+        if (defaultValue is string && !propType.IsEnum)
         {
             defaultCodeFormat = $"\"{defaultValue}\"";
-            // is enum
-            if (propType.IsEnum)
-            {
-                var enumType = propType.Name;
-                var cleanEnumValue = Helper.ToPascalCase(Helper.CleanName(defaultValue.ToString(), true), true);
-                defaultCodeFormat = $"{enumType}.{cleanEnumValue}";
-            }
-
+        }
+        else if (propType.IsEnum)     // is enum
+        {
+            var enumType = propType.Name;
+            var cleanEnumValue = Helper.ToPascalCase(Helper.CleanName(defaultValue.ToString(), true), true);
+            defaultCodeFormat = $"{enumType}.{cleanEnumValue}";
         }
         else if (propType.Name == "Boolean")
         {
