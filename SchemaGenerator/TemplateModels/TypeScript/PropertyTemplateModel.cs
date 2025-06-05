@@ -16,7 +16,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
 {
     public string TsPropertyName { get; set; }
     public string TsParameterName { get; set; }
-
+    public string TsJsonPropertyName { get; set; } // property name used in json
     public string ConvertToJavaScriptCode { get; set; } // for TS: property value to JS object
     public string ConvertToClassCode { get; set; } // for TS: JSON object to class property
 
@@ -48,9 +48,11 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         PropertyName = string.IsNullOrEmpty(PropertyName) ? this.Type : PropertyName;
         TsParameterName = Helper.CleanParameterName(PropertyName);
         TsPropertyName = TsParameterName; // make it camelCase
+        TsJsonPropertyName = PropertyName; 
+
         Description = String.IsNullOrEmpty(Description) ? TsPropertyName : Description;
 
-        ConvertToJavaScriptCode = $"data[\"{PropertyName}\"] = this.{TsPropertyName};";
+        ConvertToJavaScriptCode = $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
         ConvertToClassCode = $"this.{TsPropertyName} = obj.{TsPropertyName};";
         //validation decorators
         ValidationDecorators = GetValidationDecorators(json, isRequired: isRequired);
@@ -90,13 +92,14 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
 
         TsParameterName = Helper.CleanParameterName(PropertyName);
         TsPropertyName = TsParameterName; // make it camelCase
+        TsJsonPropertyName = TsPropertyName; // keep it the same as TsPropertyName
         Description = String.IsNullOrEmpty(Description) ? TsParameterName : Description;
 
         var typeUsed = Helper.GetTypes(propertyInfo.PropertyType);
         TsImports = typeUsed.Select(_ => new TsImport(_.Name, _.Namespace)).Distinct()?
             .ToList() ?? new List<TsImport>();
 
-        ConvertToJavaScriptCode = $"data[\"{TsPropertyName}\"] = this.{TsPropertyName};";
+        ConvertToJavaScriptCode = $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
         ConvertToClassCode = $"this.{TsPropertyName} = obj.{TsPropertyName};";
         //validation decorators
         ValidationDecorators = GetValidationDecorators(propertyInfo.PropertyType);
