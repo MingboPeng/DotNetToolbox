@@ -52,8 +52,13 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
 
         Description = String.IsNullOrEmpty(Description) ? TsPropertyName : Description;
 
-        ConvertToJavaScriptCode = $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
-        ConvertToClassCode = $"this.{TsPropertyName} = obj.{TsPropertyName};";
+        ConvertToJavaScriptCode = this.HasDefault ? 
+            $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName} ?? {DefaultCodeFormat};" : 
+            $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
+        ConvertToClassCode = this.HasDefault ? 
+            $"this.{TsPropertyName} = obj.{TsPropertyName} ?? {DefaultCodeFormat};" : 
+            $"this.{TsPropertyName} = obj.{TsPropertyName};";
+
         //validation decorators
         ValidationDecorators = GetValidationDecorators(json, isRequired: isRequired);
 
@@ -99,8 +104,8 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         TsImports = typeUsed.Select(_ => new TsImport(_.Name, _.Namespace)).Distinct()?
             .ToList() ?? new List<TsImport>();
 
-        ConvertToJavaScriptCode = $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
-        ConvertToClassCode = $"this.{TsPropertyName} = obj.{TsPropertyName};";
+        ConvertToJavaScriptCode = this.HasDefault ? $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName} ?? {DefaultCodeFormat};" : $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
+        ConvertToClassCode = this.HasDefault ? $"this.{TsPropertyName} = obj.{TsPropertyName} ?? {DefaultCodeFormat};" : $"this.{TsPropertyName} = obj.{TsPropertyName};";
         //validation decorators
         ValidationDecorators = GetValidationDecorators(propertyInfo.PropertyType);
 
