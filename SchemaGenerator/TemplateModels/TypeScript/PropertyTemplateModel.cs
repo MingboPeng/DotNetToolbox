@@ -47,11 +47,11 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
 
         PropertyName = string.IsNullOrEmpty(PropertyName) ? this.Type : PropertyName;
         TsParameterName = Helper.CleanParameterName(PropertyName);
-        TsPropertyName = Helper.CleanPropertyName(PropertyName);
+        TsPropertyName = TsParameterName; // make it camelCase
         Description = String.IsNullOrEmpty(Description) ? TsPropertyName : Description;
 
-        ConvertToJavaScriptCode = $"data[\"{PropertyName}\"] = this.{PropertyName};";
-        ConvertToClassCode = $"this.{PropertyName} = obj.{PropertyName};";
+        ConvertToJavaScriptCode = $"data[\"{PropertyName}\"] = this.{TsPropertyName};";
+        ConvertToClassCode = $"this.{TsPropertyName} = obj.{TsPropertyName};";
         //validation decorators
         ValidationDecorators = GetValidationDecorators(json, isRequired: isRequired);
 

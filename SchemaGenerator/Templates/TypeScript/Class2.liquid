@@ -1,5 +1,5 @@
 import { {{TsValidatorImportsCode}} } from 'class-validator';
-import { Type, plainToClass, instanceToPlain, Transform } from 'class-transformer';
+import { Type, plainToClass, instanceToPlain, Expose, Transform } from 'class-transformer';
 {% if HasTsNestedValidator -%}
 import { {{TsNestedValidatorImportsCode}} } from "./../helpers/class-validator";
 {% endif -%}
@@ -19,6 +19,7 @@ export {% if IsAbstract %}abstract {% endif %}class {{ ClassName }}{% if HasInhe
     {{ decorator }}
 {%  endfor -%}
 {%  endif -%}
+    @Expose({ name: "{{ property.PropertyName }}" })
 {%  if property.HasTransformDecorator -%}
     {{ property.TransformDecorator }}
 {%  endif -%}
