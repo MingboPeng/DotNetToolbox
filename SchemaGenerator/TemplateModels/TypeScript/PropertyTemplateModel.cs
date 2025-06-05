@@ -104,8 +104,12 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         TsImports = typeUsed.Select(_ => new TsImport(_.Name, _.Namespace)).Distinct()?
             .ToList() ?? new List<TsImport>();
 
-        ConvertToJavaScriptCode = this.HasDefault ? $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName} ?? {DefaultCodeFormat};" : $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
-        ConvertToClassCode = this.HasDefault ? $"this.{TsPropertyName} = obj.{TsPropertyName} ?? {DefaultCodeFormat};" : $"this.{TsPropertyName} = obj.{TsPropertyName};";
+        ConvertToJavaScriptCode = this.HasDefault 
+            ? $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName} ?? {DefaultCodeFormat};" 
+            : $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
+        ConvertToClassCode = this.HasDefault 
+            ? $"this.{TsPropertyName} = obj.{TsPropertyName} ?? {DefaultCodeFormat};"
+            : $"this.{TsPropertyName} = obj.{TsPropertyName};";
         //validation decorators
         ValidationDecorators = GetValidationDecorators(propertyInfo.PropertyType);
 
@@ -146,7 +150,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
             var itemCode = GetTransform(arrayItem, true);
             if (string.IsNullOrEmpty(itemCode))
                 return code;
-            code = $@"@Transform(({{ value }}) => value.map((item: any) => {{
+            code = $@"@Transform(({{ value }}) => value?.map((item: any) => {{
 {itemCode}
     }}))";
             return code;
@@ -188,7 +192,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
             var itemCode = GetTransform(arrayItem, true);
             if (string.IsNullOrEmpty(itemCode))
                 return code;
-            code = $@"@Transform(({{ value }}: {{ value: any }}) => value.map((item: any) => {{
+            code = $@"@Transform(({{ value }}: {{ value: any }}) => value?.map((item: any) => {{
 {itemCode}
     }}))";
             return code;
