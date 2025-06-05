@@ -50,7 +50,7 @@ export {% if IsAbstract %}abstract {% endif %}class {{ ClassName }}{% if HasInhe
 {%      endif -%}
 {% if HasProperties and IsAbstract == false -%}
         if (_data) {
-            const obj = plainToClass({{ ClassName }}, _data, { enableImplicitConversion: true });
+            const obj = plainToClass({{ ClassName }}, _data, { enableImplicitConversion: true, exposeUnsetFields: false });
 {%      for property in Properties -%}
             {{ property.ConvertToClassCode | strip | tab }}
 {%      endfor -%}
