@@ -87,7 +87,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
 
     }
 
-    public PropertyTemplateModel(PropertyInfo propertyInfo, System.Xml.Linq.XDocument xmlDoc) : base(propertyInfo, xmlDoc)
+    public PropertyTemplateModel(PropertyInfo propertyInfo, System.Xml.Linq.XDocument xmlDoc, Type classType) : base(propertyInfo, xmlDoc, classType)
     {
         //this.Type = GetTypeScriptType(propertyInfo.PropertyType, AddTsImportTypes);
 

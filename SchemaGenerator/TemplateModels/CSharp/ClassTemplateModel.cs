@@ -1,10 +1,11 @@
-﻿using TemplateModels.Base;
-using NJsonSchema;
+﻿using NJsonSchema;
 using NJsonSchema.CodeGeneration;
 using NSwag;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
+using System.Reflection;
+using TemplateModels.Base;
 
 namespace TemplateModels.CSharp;
 
@@ -67,14 +68,19 @@ public class ClassTemplateModel : ClassTemplateModelBase
 
     public ClassTemplateModel(Type classType, System.Xml.Linq.XDocument xmlDoc): base(classType, xmlDoc)
     {
-        
-        Properties = classType.GetProperties().Select(_ => new PropertyTemplateModel(_, xmlDoc)).ToList();
         CsClassName = Helper.CleanName(ClassName);
 
-        AllProperties = Properties.DistinctBy(_ => _.PropertyName).OrderByDescending(_ => _.IsRequired).ToList();
+        var props = classType.GetProperties().Select(_ => new PropertyTemplateModel(_, xmlDoc, classType))
+            .OrderByDescending(_ => _.IsRequired).ThenBy(_ => !_.IsDeclared).ToList();
+        // properties declared within this class
+        Properties = props.Where(_=>_.IsDeclared).ToList();
+        // properties declared within its base/parent classes
+        ParentProperties = props.Where(_ => !_.IsDeclared).ToList();
+        
+        AllProperties = props.DistinctBy(_ => _.PropertyName).ToList();
         hasOnlyReadOnly = AllProperties.All(_ => _.IsReadOnly);
 
-        CsImports = Properties.SelectMany(_ => _.ExternalPackageNames).Order().Distinct().Reverse().ToList();
+        CsImports = props.SelectMany(_ => _.ExternalPackageNames).Order().Distinct().Reverse().ToList();
     }
 
   

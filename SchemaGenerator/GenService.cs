@@ -47,20 +47,27 @@ public class GenService : GenProcessorBase
 
     private static List<Type> LoadSourceCode(string sourceDir)
     {
+        Assembly sourceAssembly = null;
+        string xmlDocFilePath = string.Empty;
+
         // get all package dlls
-        var dllFiles = System.IO.Directory.GetFiles($"{sourceDir}/bin", "*.dll", SearchOption.AllDirectories).ToList();
-        var sourceDll = dllFiles?.FirstOrDefault(x => System.IO.Path.GetFileName(x) == "source.dll");
-        if (!string.IsNullOrEmpty(sourceDll))
-            dllFiles = dllFiles.Where(_ => _ != sourceDll).ToList();
-        var sourceAssembly = Assembly.LoadFrom(sourceDll);
-        foreach (var item in dllFiles)
+        var binDir = System.IO.Path.Combine(sourceDir, "bin");
+        if (Directory.Exists(binDir))
         {
-            Assembly.LoadFrom(item);
+            var dllFiles = System.IO.Directory.GetFiles(binDir, "*.dll", SearchOption.AllDirectories).ToList();
+            var sourceDll = dllFiles?.FirstOrDefault(x => System.IO.Path.GetFileName(x) == "source.dll");
+            if (!string.IsNullOrEmpty(sourceDll))
+                dllFiles = dllFiles.Where(_ => _ != sourceDll).ToList();
+            sourceAssembly = Assembly.LoadFrom(sourceDll);
+            foreach (var item in dllFiles)
+            {
+                Assembly.LoadFrom(item);
+            }
+
+            // get xml doc file path
+            xmlDocFilePath = System.IO.Path.ChangeExtension(sourceDll, "xml");
+
         }
-
-        // get xml doc file path
-        string xmlDocFilePath = System.IO.Path.ChangeExtension(sourceDll, "xml");
-
 
         if (sourceAssembly == null)
         {
@@ -76,7 +83,7 @@ public class GenService : GenProcessorBase
              MetadataReference.CreateFromFile(typeof(RequiredAttribute).Assembly.Location), // System.ComponentModel.DataAnnotations.dll
              MetadataReference.CreateFromFile(typeof(Attribute).Assembly.Location), // System.Runtime.dll
              MetadataReference.CreateFromFile( System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(object).Assembly.Location), "System.Runtime.dll")) // System.Runtime.dll
-        }.ToList();
+            }.ToList();
             //references.AddRange(dllFiles.Select(_ => MetadataReference.CreateFromFile(_)));
 
 

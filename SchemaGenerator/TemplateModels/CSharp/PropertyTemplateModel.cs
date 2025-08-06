@@ -98,7 +98,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         IsValueType = parameterInfo.ParameterType.IsValueType;
     }
 
-    public PropertyTemplateModel(PropertyInfo propertyInfo, System.Xml.Linq.XDocument xmlDoc) : base(propertyInfo, xmlDoc)
+    public PropertyTemplateModel(PropertyInfo propertyInfo, System.Xml.Linq.XDocument xmlDoc, Type classType) : base(propertyInfo, xmlDoc, classType)
     {
         // get default value for property for the current client
         if (this.HasDefault)

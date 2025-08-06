@@ -29,7 +29,7 @@ namespace {{ NameSpaceName }}
     /// </summary>
 	{%- endif -%}
     [Summary(@"{{ Description }}")]
-    public partial class {{ CsClassName }} {% if HasInheritance %}: {{ Inheritance }}{% endif %}
+    public {% if IsAbstract %}abstract {% endif %}partial class {{ CsClassName }} {% if HasInheritance %}: {{ Inheritance }}{% endif %}
     {
     {%- if hasOnlyReadOnly == false -%}
         /// <summary>
@@ -95,7 +95,7 @@ namespace {{ NameSpaceName }}
         [MinLength({{ property.MinLength }})]{% endif %}{% if property.HasMaxLength %}
         [MaxLength({{ property.MaxLength }})]{% endif %}
         [JsonPropertyName("{{ property.CsJsonPropertyNameName }}")] // System.Text.Json
-        public {{ property.Type }} {{ property.CsPropertyName }} { get;{% if property.IsReadOnly %} protected{% endif %} set; }{% if property.HasDefault %} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};{% endif %}
+        public {% if property.IsAbstract %}abstract {% endif %}{% if property.IsOverride %}override {% endif %}{{ property.Type }} {{ property.CsPropertyName }} { get;{% if property.IsReadOnly %} protected{% endif %} set; }{% if property.HasDefault %} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};{% endif %}
 	{%- endfor -%}
 
 

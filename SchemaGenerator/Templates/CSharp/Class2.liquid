@@ -33,7 +33,7 @@ namespace {{ NameSpaceName }}
     [Summary(@"{{ Description }}")]
     [System.Serializable]
     [DataContract(Name = "{{ ClassName }}")]
-    public partial class {{ CsClassName }} :{% if HasInheritance %} {{ Inheritance }},{% endif %} System.IEquatable<{{ CsClassName }}>
+    public {% if IsAbstract %}abstract {% endif %}partial class {{ CsClassName }} :{% if HasInheritance %} {{ Inheritance }},{% endif %} System.IEquatable<{{ CsClassName }}>
     {
     {%- if hasOnlyReadOnly == false -%}
         /// <summary>
@@ -106,7 +106,7 @@ namespace {{ NameSpaceName }}
         [MaxLength({{ property.MaxLength }})]{% endif %}
         [DataMember(Name = "{{ property.CsJsonPropertyNameName }}"{% if property.IsRequired %}, IsRequired = true{% endif %})] // For Newtonsoft.Json
         [System.Text.Json.Serialization.JsonPropertyName("{{ property.CsJsonPropertyNameName }}")] // For System.Text.Json
-        public {{ property.Type }} {{ property.CsPropertyName }} { get;{% if property.IsReadOnly %} protected{% endif %} set; }{% if property.HasDefault %} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};{% endif %}
+        public {% if property.IsAbstract %}abstract {% endif %}{% if property.IsOverride %}override {% endif %}{{ property.Type }} {{ property.CsPropertyName }} { get;{% if property.IsReadOnly %} protected{% endif %} set; }{% if property.HasDefault %} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};{% endif %}
 	{%- endfor -%}
 
 

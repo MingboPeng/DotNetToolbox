@@ -26,6 +26,11 @@ public class PropertyTemplateModelBase
     public bool IsAnyOf { get; set; }
     public List<JsonSchema> AnyOf { get; set; }
 
+    public bool IsAbstract { get; set; }
+    public bool IsOverride { get; set; }
+    public bool IsDeclared { get; set; }
+    public Type DeclaringType { get; set; }
+
     public bool IsArray { get; set; }
 
     public string Pattern { get; set; }
@@ -90,7 +95,7 @@ public class PropertyTemplateModelBase
 
     }
 
-    public PropertyTemplateModelBase(PropertyInfo propertyInfo, System.Xml.Linq.XDocument xmlDoc)
+    public PropertyTemplateModelBase(PropertyInfo propertyInfo, System.Xml.Linq.XDocument xmlDoc, Type classType)
     {
         this.Type = Helper.GetCheckTypeName(propertyInfo.PropertyType);
         this.PropertyName = propertyInfo.Name;
@@ -123,6 +128,18 @@ public class PropertyTemplateModelBase
         var packages = rTypes.Select(_ => _.Namespace);
 
         ExternalPackageNames.AddRange(packages);
+
+
+        // IsAbstract/Override
+        MethodInfo accessor = propertyInfo.GetMethod ?? propertyInfo.SetMethod;
+        if (accessor != null)
+        {
+            this.IsAbstract = accessor.IsAbstract;
+            this.IsOverride = accessor.GetBaseDefinition() != accessor;
+            this.DeclaringType = accessor.DeclaringType;
+            this.IsDeclared = this.DeclaringType == classType;
+        }
+
     }
 
 

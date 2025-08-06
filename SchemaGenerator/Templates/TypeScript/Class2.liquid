@@ -1,5 +1,6 @@
 import { {{TsValidatorImportsCode}} } from 'class-validator';
-import { Type, plainToClass, instanceToPlain, Expose, Transform } from 'class-transformer';
+import { Type, instanceToPlain, Expose, Transform } from 'class-transformer';
+import { deepTransform } from '../deepTransform';
 {% if HasTsNestedValidator -%}
 import { {{TsNestedValidatorImportsCode}} } from "./../helpers/class-validator";
 {% endif -%}
@@ -45,13 +46,11 @@ export {% if IsAbstract %}abstract {% endif %}class {{ ClassName }}{% if HasInhe
 
 
     {% if HasInheritance %}override {% endif %}init(_data?: any) {
-{%      if HasInheritance -%}
-        super.init(_data);
-{%      endif -%}
+
 {% if HasProperties and IsAbstract == false -%}
         if (_data) {
-            const obj = plainToClass({{ ClassName }}, _data, { enableImplicitConversion: true, exposeUnsetFields: false, exposeDefaultValues: true });
-{%      for property in Properties -%}
+            const obj = deepTransform({{ ClassName }}, _data);
+{%      for property in AllProperties -%}
             {{ property.ConvertToClassCode | strip | tab }}
 {%      endfor -%}
         }

@@ -1,12 +1,13 @@
-﻿using TemplateModels.Base;
-using NJsonSchema;
+﻿using NJsonSchema;
 using NJsonSchema.CodeGeneration;
 using NSwag;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using SchemaGenerator;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using TemplateModels.Base;
 
 namespace TemplateModels.TypeScript;
 public class ClassTemplateModel : ClassTemplateModelBase
@@ -24,6 +25,8 @@ public class ClassTemplateModel : ClassTemplateModelBase
     public List<string> TsNestedValidatorImports { get; set; }
     public string TsNestedValidatorImportsCode { get; set; }
     public bool HasTsNestedValidator => !string.IsNullOrEmpty(TsNestedValidatorImportsCode);
+    public List<PropertyTemplateModel> ParentProperties { get; set; }
+    public List<PropertyTemplateModel> AllProperties { get; set; }
 
     public ClassTemplateModel(OpenApiDocument doc, JsonSchema json, Mapper mapper = default) : base(json)
     {
@@ -68,10 +71,20 @@ public class ClassTemplateModel : ClassTemplateModelBase
 
     public ClassTemplateModel(Type classType, System.Xml.Linq.XDocument xmlDoc) : base(classType, xmlDoc)
     {
-        Properties = classType.GetProperties().Select(_ => new PropertyTemplateModel(_, xmlDoc)).ToList();
-        //ClassName = Helper.CleanName(ClassName);
+        var props = classType.GetProperties().Select(_ => new PropertyTemplateModel(_, xmlDoc, classType))
+            .OrderByDescending(_ => _.IsRequired).ThenBy(_ => !_.IsDeclared).ToList();
+        // properties declared within this class
+        Properties = props.Where(_ => _.IsDeclared).ToList();
+        // properties declared within its base/parent classes
+        ParentProperties = props.Where(_ => !_.IsDeclared).ToList();
+        AllProperties = props.DistinctBy(_ => _.PropertyName).ToList();
 
-        TsImports = Properties?.SelectMany(_ => _.TsImports)?.Distinct()?.ToList() ?? new List<TsImport>();
+        if (this.ClassName.Contains("RevitView"))
+        {
+
+        }
+
+        TsImports = props?.SelectMany(_ => _.TsImports)?.Distinct()?.ToList() ?? new List<TsImport>();
 
         // add base class reference
         if (!string.IsNullOrEmpty(Inheritance))
@@ -88,7 +101,7 @@ public class ClassTemplateModel : ClassTemplateModelBase
         // fix TsImports
         TsImports.ForEach(_ => _.Check());
 
-        var paramValidators = Properties.SelectMany(_ => _.ValidationDecorators).Select(_ => ValidationDecoratorToImport(_)).ToList();
+        var paramValidators = props.SelectMany(_ => _.ValidationDecorators).Select(_ => ValidationDecoratorToImport(_)).ToList();
         paramValidators.Add("validate");
         paramValidators.Add("ValidationError as TsValidationError");
         TsValidatorImports = paramValidators.Distinct().ToList();
