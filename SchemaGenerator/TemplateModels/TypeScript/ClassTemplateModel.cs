@@ -3,6 +3,7 @@ using NJsonSchema.CodeGeneration;
 using NSwag;
 using SchemaGenerator;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -33,8 +34,16 @@ public class ClassTemplateModel : ClassTemplateModelBase
         mapper = mapper ?? new Mapper(null, null);
         Properties = json.ActualProperties.Select(_ => new PropertyTemplateModel(_.Key, _.Value)).ToList();
 
-        DerivedClasses = json.GetDerivedSchemas(doc).Select(_ => new ClassTemplateModel(doc, _.Key, mapper)).ToList();
+        var parentProperties = json.AllInheritedSchemas
+            .SelectMany(_ => _.ActualProperties).Select(_ => new PropertyTemplateModel(_.Key, _.Value))
+            .DistinctBy(_=>_.PropertyName).ToList();
 
+        AllProperties = Properties.ToList();
+        AllProperties.AddRange(parentProperties.Where(a => !Properties.Any(b => b.PropertyName == a.PropertyName)));
+
+
+        DerivedClasses = json.GetDerivedSchemas(doc).Select(_ => new ClassTemplateModel(doc, _.Key, mapper)).ToList();
+        
 
         IsAbstract = DerivedClasses.Any() && InheritedSchema == null;
 
@@ -78,11 +87,6 @@ public class ClassTemplateModel : ClassTemplateModelBase
         // properties declared within its base/parent classes
         ParentProperties = props.Where(_ => !_.IsDeclared).ToList();
         AllProperties = props.DistinctBy(_ => _.PropertyName).ToList();
-
-        if (this.ClassName.Contains("RevitView"))
-        {
-
-        }
 
         TsImports = props?.SelectMany(_ => _.TsImports)?.Distinct()?.ToList() ?? new List<TsImport>();
 
