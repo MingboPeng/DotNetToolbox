@@ -13,8 +13,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+// using System.Text.Json;
+// using System.Text.Json.Serialization;
 {% if HasCsImports -%}
 {% for Package in CsPackages -%}
 using {{ Package }};
@@ -35,7 +35,7 @@ namespace {{ NameSpaceName }}
         /// <summary>
         /// Initializes a new instance of the <see cref="{{CsClassName}}" /> class.
         /// </summary>
-        [System.Text.Json.Serialization.JsonConstructor]
+        // [System.Text.Json.Serialization.JsonConstructor] // for future switching to System.Text.Json
         protected {{CsClassName}}() 
         { 
             // Set readonly properties with defaultValue
@@ -55,7 +55,7 @@ namespace {{ NameSpaceName }}
         {%- endif -%}
     {%- endfor -%}
     {%- if hasOnlyReadOnly -%}
-        [System.Text.Json.Serialization.JsonConstructor]
+        // [System.Text.Json.Serialization.JsonConstructor] // for future switching to System.Text.Json
     {%- endif -%}
         public {{ CsClassName }}
         (
@@ -94,9 +94,9 @@ namespace {{ NameSpaceName }}
         [Range({% if property.HasMinimum %}{{ property.Minimum }}{% else %}{{ property.Type }}.MinValue{% endif %}, {% if property.HasMaximum %}{{ property.Maximum }}{% else %}{{ property.Type }}.MaxValue{% endif %})]{% endif %}{% if property.HasMinLength %}
         [MinLength({{ property.MinLength }})]{% endif %}{% if property.HasMaxLength %}
         [MaxLength({{ property.MaxLength }})]{% endif %}
-        [JsonPropertyName("{{ property.CsJsonPropertyNameName }}")] // System.Text.Json
+        // [JsonPropertyName("{{ property.CsJsonPropertyNameName }}")] // System.Text.Json
         {%- if property.IsAnyOf -%}
-        [System.Text.Json.Serialization.JsonConverter(typeof(AnyOfSystemJsonConverter))] // For System.Text.Json
+        // [System.Text.Json.Serialization.JsonConverter(typeof(AnyOfSystemJsonConverter))] // For System.Text.Json
         {%- endif -%}
         public {% if property.IsAbstract %}abstract {% endif %}{% if property.IsOverride %}override {% endif %}{{ property.Type }} {{ property.CsPropertyName }} { get;{% if property.IsReadOnly %} protected{% endif %} set; }{% if property.HasDefault %} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};{% endif %}
 	{%- endfor -%}
