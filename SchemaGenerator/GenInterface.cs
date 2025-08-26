@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TemplateModels.CSharp;
 //using 
 
@@ -17,12 +18,56 @@ public class GenInterface : Generator
 
     public static void Execute()
     {
-        var mapper = System.IO.Path.Combine(docDir, "model_mapper.json");
+        //var mapperFile = System.IO.Path.Combine(docDir, "model_mapper.json");
         var interfaceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "src", "CSharpSDK", "Interface");
         if (Directory.Exists(interfaceDir))
             System.IO.Directory.Delete(interfaceDir, true);
 
-        var interfaces = ReadJson(mapper);
+        Dictionary<string, List<string>> interfaces = null;
+        var jsons = _config.files.Where(_ => _.Contains("_mapper.json"));
+        if (jsons.Contains("model_mapper.json"))
+        {
+            var jfile = System.IO.Path.Combine(docDir, "model_mapper.json");
+            interfaces = ReadJson(jfile);
+        }
+        else
+        {
+            foreach (var j in jsons)
+            {
+                var jfile = System.IO.Path.Combine(docDir, j);
+                var ifs = ReadJson(jfile);
+                if (interfaces == null)
+                    interfaces = ifs;
+                else
+                {
+                    foreach (var item in ifs)
+                    {
+                        if (interfaces.TryGetValue(item.Key, out var items))
+                        {
+                            items.AddRange(item.Value);
+                        }
+                        else
+                        {
+                            interfaces.Add(item.Key, item.Value);
+                        }
+                    }
+                 
+                }
+            }
+
+            
+        }
+
+        // remove duplicated items
+        interfaces = interfaces.ToDictionary(
+            kvp => kvp.Key,
+            kvp => kvp.Value.Distinct().Order().ToList()
+        );
+
+
+
+
+        //ClassTemplateModel.CsImports
 
         // generate interfaces
         var template = System.IO.Path.Combine(templateDir, TemplateModels.Helper.Language.ToString());
