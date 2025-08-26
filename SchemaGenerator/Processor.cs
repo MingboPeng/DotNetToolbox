@@ -8,26 +8,26 @@ namespace SchemaGenerator
         public static string ProcessCSharp(string code)
         {
 
-            // add extern alias LBTNewtonsoft;
-            string pattern = @"(?m)^(namespace\s)";
-            string replacement = @"extern alias LBTNewtonsoft;"+Environment.NewLine+ "$1";
-            code = Regex.Replace(code, pattern, replacement);
+            // // add extern alias LBTNewtonsoft;
+            // string pattern = @"(?m)^(namespace\s)";
+            // string replacement = @"extern alias LBTNewtonsoft;"+Environment.NewLine+ "$1";
+            // code = Regex.Replace(code, pattern, replacement);
 
-            // add  using LBTNewtonsoft = LBTNewtonsoft.Newtonsoft;
-            pattern = @"(using System = global::System;)(?m)";
-            replacement = @"$1" + Environment.NewLine + "    using LBTNewtonsoft = LBTNewtonsoft.Newtonsoft;";
-            code = Regex.Replace(code, pattern, replacement);
+            // // add  using LBTNewtonsoft = LBT.Newtonsoft;
+            // pattern = @"(using System = global::System;)(?m)";
+            // replacement = @"$1" + Environment.NewLine + "    using LBTNewtonsoft = LBT.Newtonsoft;";
+            // code = Regex.Replace(code, pattern, replacement);
 
-            // replace  Newtonsoft.Json. with LBTNewtonsoft.Json.;
-            pattern = @"Newtonsoft.Json.";
-            replacement = @"LBTNewtonsoft.Json.";
-            code = Regex.Replace(code, pattern, replacement);
+            // // replace  Newtonsoft.Json. with LBTNewtonsoft.Json.;
+            // pattern = @"Newtonsoft.Json.";
+            // replacement = @"LBTNewtonsoft.Json.";
+            // code = Regex.Replace(code, pattern, replacement);
 
 
-            // add override to public string ObjType { get; set; }
-            pattern = @"public string ObjType { get; set; }";
-            replacement = @"public override string ObjType { get; set; }";
-            code = Regex.Replace(code, pattern, replacement);
+            // // add override to public string ObjType { get; set; }
+            // var pattern = @"public string ObjType { get; set; }";
+            // var replacement = @"public override string ObjType { get; set; }";
+            // code = Regex.Replace(code, pattern, replacement);
             return code;
         }
 
@@ -43,7 +43,7 @@ namespace SchemaGenerator
                 return $"{match.Groups[1].Value}{match.Groups[3].Value}: {match.Groups[4].Value} = \"{className}\";";
             });
 
-            
+
             return code;
         }
     }
