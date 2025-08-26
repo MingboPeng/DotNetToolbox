@@ -53,18 +53,24 @@ public class GenCsDTO : Generator
                 continue;
             }
 
-            jSchemas.Merge(schemas, new JsonMergeSettings
+
+            // merge schema
+            var allProps = jSchemas.Properties().Select(p => p.Name).ToList();
+            var filteredNewProps = schemas.Properties().Where(_ => !allProps.Contains(_.Name));
+            foreach (var prop in filteredNewProps)
             {
-                MergeArrayHandling = MergeArrayHandling.Union
-            });
+                jSchemas[prop.Name] = prop.Value;
+            }
             docMapper.Merge(mapper);
 
         }
 
 
         docJson["components"]["schemas"] = jSchemas;
+        var combinedJson = docJson.ToString();
+        System.IO.File.WriteAllText(System.IO.Path.Combine(docDir, "all_combined.json"), combinedJson);
 
-        var doc = OpenApiDocument.FromJsonAsync(docJson.ToString()).Result;
+        var doc = OpenApiDocument.FromJsonAsync(combinedJson).Result;
         //var tsFile = ConvertToTypeScript(doc, rootDir, outputDir);
         //Console.WriteLine($"Generated file is added as {tsFile}");
 
