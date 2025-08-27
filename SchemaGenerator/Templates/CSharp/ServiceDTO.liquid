@@ -31,6 +31,7 @@ namespace {{ NameSpaceName }}
     /// </summary>
 	{%- endif -%}
     [Summary(@"{{ Description }}")]
+    [DataContract(Name = "{{ CsClassName }}")] // For internal Serialization XML/JSON
     public {% if IsAbstract %}abstract {% endif %}partial class {{ CsClassName }} {% if HasInheritance %}: {{ Inheritance }}{% endif %}
     {
     {%- if hasOnlyReadOnly == false -%}
@@ -93,17 +94,16 @@ namespace {{ NameSpaceName }}
         /// {{ property.Description }}
         /// </summary>
         [Summary(@"{{ property.Description }}")]{% if property.IsRequired %}
-        [Required]{% endif %}{% if property.HasPattern %}
+        [Required]
+        // [System.Text.Json.Serialization.JsonRequired] // For System.Text.Json {% else %}
+        // [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]  // For System.Text.Json  {% endif %}{% if property.HasPattern %}
         [RegularExpression(@"{{ property.Pattern }}")]{% endif %}{% if property.HasMaximum or property.HasMinimum %}
         [Range({% if property.HasMinimum %}{{ property.Minimum }}{% else %}{{ property.Type }}.MinValue{% endif %}, {% if property.HasMaximum %}{{ property.Maximum }}{% else %}{{ property.Type }}.MaxValue{% endif %})]{% endif %}{% if property.HasMinLength %}
         [MinLength({{ property.MinLength }})]{% endif %}{% if property.HasMaxLength %}
         [MaxLength({{ property.MaxLength }})]{% endif %}
-        [DataMember(Name = "{{ property.CsJsonPropertyNameName }}"{% if property.IsRequired %}, IsRequired = true{% endif %})] // For Newtonsoft.Json
+        [DataMember(Name = "{{ property.CsJsonPropertyNameName }}"{% if property.IsRequired %}, IsRequired = true{% endif %})] // For internal Serialization XML/JSON
+        [JsonProperty("{{ property.CsJsonPropertyNameName }}"{% if property.IsRequired %}, Required = Required.Always{% else %}, NullValueHandling = NullValueHandling.Ignore{% endif %})] // For Newtonsoft.Json
         // [System.Text.Json.Serialization.JsonPropertyName("{{ property.CsJsonPropertyNameName }}")] // For System.Text.Json
-        {%- if property.IsRequired == false -%}
-        [LBT.Newtonsoft.Json.JsonProperty(NullValueHandling = NullValueHandling.Ignore)] // For Newtonsoft.Json
-        // [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]  // For System.Text.Json
-        {%- endif -%}
         public {% if property.IsAbstract %}abstract {% endif %}{% if property.IsOverride %}override {% endif %}{{ property.Type }} {{ property.CsPropertyName }} { get;{% if property.IsReadOnly %} protected{% endif %} set; }{% if property.HasDefault %} = {% if property.HasVeryLongDefault %}{{ property.CsPropertyName }}Default{% else %}{{ property.DefaultCodeFormat }}{% endif %};{% endif %}
 	{%- endfor -%}
 
