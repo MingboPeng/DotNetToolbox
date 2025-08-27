@@ -7,7 +7,9 @@
  using System.Runtime.Serialization;
  // using System.Text.Json;
  // using System.Text.Json.Serialization;
- 
+ using LBT.Newtonsoft.Json;
+ using LBT.Newtonsoft.Json.Converters;
+
 namespace {{ NameSpaceName }}
 {
 	{%- if HasDescription -%}
@@ -15,7 +17,8 @@ namespace {{ NameSpaceName }}
     /// {{ Description }}
     /// </summary>
 	{%- endif -%}
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    //[JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum {{ EnumName }}{%- if HasExtendedValueRange %} : long{% endif %}
     {
     {%- for enum in EnumItems %}
