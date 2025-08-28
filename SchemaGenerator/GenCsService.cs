@@ -129,7 +129,7 @@ public class GenCsService : GenProcessorBase
 
     private static string GenDTOEnum(string templateDir, EnumTemplateModel model, string outputDir)
     {
-        var templateSource = File.ReadAllText(Path.Combine(templateDir, "EnumDTO.liquid"), System.Text.Encoding.UTF8);
+        var templateSource = File.ReadAllText(Path.Combine(templateDir, "Enum.liquid"), System.Text.Encoding.UTF8);
         var code = Gen(templateSource, model);
         var file = System.IO.Path.Combine(outputDir, $"{model.EnumName}.cs");
         System.IO.File.WriteAllText(file, code, System.Text.Encoding.UTF8);

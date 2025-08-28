@@ -5,6 +5,8 @@
  */
 
  using System.Runtime.Serialization;
+ // using System.Text.Json;
+ // using System.Text.Json.Serialization;
  using LBT.Newtonsoft.Json;
  using LBT.Newtonsoft.Json.Converters;
 
@@ -15,11 +17,16 @@ namespace {{ NameSpaceName }}
     /// {{ Description }}
     /// </summary>
 	{%- endif -%}
-    [JsonConverter(typeof(StringEnumConverter))]
+    // Shared enum across all serializers
+    [DataContract] // For DataContractSerializer
+    [JsonConverter(typeof(StringEnumConverter))] // Newtonsoft string form
+    // [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter))] // STJ string form
     public enum {{ EnumName }}{%- if HasExtendedValueRange %} : long{% endif %}
     {
     {%- for enum in EnumItems %}
         [EnumMember(Value = "{{ enum.Value }}")]
+        [JsonProperty("{{ enum.Value }}")]       // Newtonsoft
+        // [JsonPropertyName("{{ enum.Value }}")]                   // STJ
         {{ enum.Key }} = {{ enum.Index }},
     {%- endfor %}
     }

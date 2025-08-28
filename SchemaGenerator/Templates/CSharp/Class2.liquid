@@ -31,7 +31,7 @@ namespace {{ NameSpaceName }}
 	{%- endif -%}
     [Summary(@"{{ Description }}")]
     [System.Serializable]
-    [DataContract(Name = "{{ CsClassName }}")]
+    [DataContract(Name = "{{ CsClassName }}")] // Enables DataMember rules. For internal Serialization XML/JSON
     public {% if IsAbstract %}abstract {% endif %}partial class {{ CsClassName }} :{% if HasInheritance %} {{ Inheritance }},{% endif %} System.IEquatable<{{ CsClassName }}>
     {
     {%- if hasOnlyReadOnly == false -%}
@@ -98,7 +98,7 @@ namespace {{ NameSpaceName }}
         /// {{ property.Description }}
         /// </summary>
         [Summary(@"{{ property.Description }}")]{% if property.IsRequired %}
-        [Required]
+        [Required] // For validation after deserialization
         // [System.Text.Json.Serialization.JsonRequired] // For System.Text.Json {% else %}
         // [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]  // For System.Text.Json  {% endif %}{% if property.HasPattern %}
         [RegularExpression(@"{{ property.Pattern }}")]{% endif %}{% if property.HasMaximum or property.HasMinimum %}
