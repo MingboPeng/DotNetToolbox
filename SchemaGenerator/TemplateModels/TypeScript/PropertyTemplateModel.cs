@@ -48,15 +48,15 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         PropertyName = string.IsNullOrEmpty(PropertyName) ? this.Type : PropertyName;
         TsParameterName = Helper.CleanParameterName(PropertyName);
         TsPropertyName = TsParameterName; // make it camelCase
-        TsJsonPropertyName = PropertyName; 
+        TsJsonPropertyName = PropertyName;
 
         Description = String.IsNullOrEmpty(Description) ? TsPropertyName : Description;
 
-        ConvertToJavaScriptCode = this.HasDefault ? 
-            $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName} ?? {DefaultCodeFormat};" : 
+        ConvertToJavaScriptCode = this.HasDefault ?
+            $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName} ?? {DefaultCodeFormat};" :
             $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
-        ConvertToClassCode = this.HasDefault ? 
-            $"this.{TsPropertyName} = obj.{TsPropertyName} ?? {DefaultCodeFormat};" : 
+        ConvertToClassCode = this.HasDefault ?
+            $"this.{TsPropertyName} = obj.{TsPropertyName} ?? {DefaultCodeFormat};" :
             $"this.{TsPropertyName} = obj.{TsPropertyName};";
 
         //validation decorators
@@ -104,10 +104,10 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         TsImports = typeUsed.Select(_ => new TsImport(_.Name, _.Namespace)).Distinct()?
             .ToList() ?? new List<TsImport>();
 
-        ConvertToJavaScriptCode = this.HasDefault 
-            ? $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName} ?? {DefaultCodeFormat};" 
+        ConvertToJavaScriptCode = this.HasDefault
+            ? $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName} ?? {DefaultCodeFormat};"
             : $"data[\"{TsJsonPropertyName}\"] = this.{TsPropertyName};";
-        ConvertToClassCode = this.HasDefault 
+        ConvertToClassCode = this.HasDefault
             ? $"this.{TsPropertyName} = obj.{TsPropertyName} ?? {DefaultCodeFormat};"
             : $"this.{TsPropertyName} = obj.{TsPropertyName};";
         //validation decorators
@@ -313,37 +313,44 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         if (!isValueType)
         {
             var refPropType = propType;
-            result.Add(isArrayItem ? $"@IsInstance({refPropType}, {{ each: true }})" : $"@IsInstance({refPropType})");
             result.Add($"@Type(() => {refPropType})");
+            result.Add(isArrayItem ? $"@IsInstance({refPropType}, {{ each: true }})" : $"@IsInstance({refPropType})");
             result.Add(isArrayItem ? "@ValidateNested({ each: true })" : "@ValidateNested()");
         }
         else if (type.IsEnum)
         {
-            result.Add(isArrayItem ? $"@IsEnum({propType}, {{ each: true }})" : $"@IsEnum({propType})");
             result.Add($"@Type(() => String)");
+            result.Add(isArrayItem ? $"@IsEnum({propType}, {{ each: true }})" : $"@IsEnum({propType})");
+
         }
         else if (type == typeof(int) || type == typeof(long) || type == typeof(short) || type == typeof(byte)) // number
         {
+            result.Add($"@Type(() => Number)");
             result.Add(isArrayItem ? "@IsInt({ each: true })" : "@IsInt()");
         }
         else if (type == typeof(double) || type == typeof(float) || type == typeof(decimal)) // number
         {
+            result.Add($"@Type(() => Number)");
             result.Add(isArrayItem ? "@IsNumber({},{ each: true })" : "@IsNumber()");
         }
         else if (type == typeof(string) || type == typeof(char)) // string
         {
+            result.Add($"@Type(() => String)");
             result.Add(isArrayItem ? "@IsString({ each: true })" : "@IsString()");
         }
         else if (type == typeof(bool)) // boolean
         {
+            result.Add($"@Type(() => Boolean)");
             result.Add(isArrayItem ? "@IsBoolean({ each: true })" : "@IsBoolean()");
         }
         else if (type == typeof(DateTime)) //Date
         {
+            result.Add($"@Type(() => Date)");
             result.Add(isArrayItem ? "@IsDate({ each: true })" : "@IsDate()");
         }
         else if (type == typeof(Guid)) // string
         {
+            result.Add($"@Type(() => String)");
             result.Add(isArrayItem ? "@IsUUID({ each: true })" : "@IsUUID()");
         }
         else
@@ -454,31 +461,35 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
             var refPropType = json.ActualSchema.Title;
             if (json.ActualSchema.IsEnumeration)
             {
-                result.Add(isArrayItem ? $"@IsEnum({refPropType}, {{ each: true }})" : $"@IsEnum({refPropType})");
                 result.Add($"@Type(() => String)");
+                result.Add(isArrayItem ? $"@IsEnum({refPropType}, {{ each: true }})" : $"@IsEnum({refPropType})");
             }
             else
             {
-                result.Add(isArrayItem ? $"@IsInstance({refPropType}, {{ each: true }})" : $"@IsInstance({refPropType})");
                 result.Add($"@Type(() => {refPropType})");
+                result.Add(isArrayItem ? $"@IsInstance({refPropType}, {{ each: true }})" : $"@IsInstance({refPropType})");
                 result.Add(isArrayItem ? "@ValidateNested({ each: true })" : "@ValidateNested()");
             }
 
         }
         else if (propType == "Integer")
         {
+            result.Add($"@Type(() => Number)");
             result.Add(isArrayItem ? "@IsInt({ each: true })" : "@IsInt()");
         }
         else if (propType == "Number")
         {
+            result.Add($"@Type(() => Number)");
             result.Add(isArrayItem ? "@IsNumber({},{ each: true })" : "@IsNumber()");
         }
         else if (propType == "String")
         {
+            result.Add($"@Type(() => String)");
             result.Add(isArrayItem ? "@IsString({ each: true })" : "@IsString()");
         }
         else if (propType == "Boolean")
         {
+            result.Add($"@Type(() => Boolean)");
             result.Add(isArrayItem ? "@IsBoolean({ each: true })" : "@IsBoolean()");
         }
         else
