@@ -20,7 +20,7 @@ public class GenService : GenProcessorBase
         // schema source dir
         //var sourceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "ServiceSource");
         // load service interface from cs file
-        LoadServiceSource(servieSourceDir, out var services, out var dtos);
+        LoadServiceSource(serviceSourceDir, out var services, out var dtos);
 
         if (genCs)
         {
@@ -122,7 +122,7 @@ public class GenService : GenProcessorBase
 
             Console.WriteLine("Compilation completed!");
         }
-       
+
         var types = sourceAssembly.GetTypes().ToList();
 
         var xmlDoc = System.Xml.Linq.XDocument.Load(xmlDocFilePath);

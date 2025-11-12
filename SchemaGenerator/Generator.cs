@@ -25,12 +25,14 @@ public partial class Generator
     public static string defaultConfigPath = Path.Combine(docDir, "config.json");
     public static string outputDir => System.IO.Path.Combine(rootDir, _toolFolder, "Output");
     public static string templateDir => System.IO.Path.Combine(rootDir, _toolFolder, "Templates");
-    public static string servieSourceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "ServiceSource");
+
+    private static string _serviceSourceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "ServiceSource");
+    private static string _sourceDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "source"); // some projects use this folder name instead of ServiceSource
+    public static string serviceSourceDir => System.IO.Directory.Exists(_serviceSourceDir) ? _serviceSourceDir : _sourceDir;
 
 
     static void Main(string[] args)
     {
-
         Console.WriteLine($"Current working dir: {workingDir}");
         Console.WriteLine(string.Join(",", args));
 
@@ -38,10 +40,10 @@ public partial class Generator
             throw new ArgumentException($"Invalid {rootDir}");
         Console.WriteLine($"Current root dir: {rootDir}");
         Console.WriteLine($"Current docDir: {docDir}");
-        Console.WriteLine($"Current servieSourceDir: {servieSourceDir}");
-
+        Console.WriteLine($"Current servieSourceDir: {serviceSourceDir}");
 
         System.IO.Directory.CreateDirectory(outputDir);
+        Debug.WriteLine($"Output dir: {outputDir}");
 
         var supportedArgs = new string[]
         {
@@ -81,7 +83,7 @@ public partial class Generator
         }
         if (!System.IO.File.Exists(configPath))
         {
-            configPath = System.IO.Path.Combine(servieSourceDir, "config.json");
+            configPath = System.IO.Path.Combine(serviceSourceDir, "config.json");
         }
 
 
