@@ -43,7 +43,7 @@ public partial class Generator
         Console.WriteLine($"Current servieSourceDir: {serviceSourceDir}");
 
         System.IO.Directory.CreateDirectory(outputDir);
-        Debug.WriteLine($"Output dir: {outputDir}");
+        Console.WriteLine($"Output dir: {outputDir}");
 
         var supportedArgs = new string[]
         {
