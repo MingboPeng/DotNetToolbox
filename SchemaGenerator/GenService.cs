@@ -55,7 +55,7 @@ public class GenService : GenProcessorBase
         if (Directory.Exists(binDir))
         {
             var dllFiles = System.IO.Directory.GetFiles(binDir, "*.dll", SearchOption.AllDirectories).ToList();
-            var sourceDll = dllFiles?.FirstOrDefault(x => System.IO.Path.GetFileName(x) == "source.dll");
+            var sourceDll = dllFiles?.FirstOrDefault(x => System.IO.Path.GetFileName(x).ToLower().EndsWith("source.dll"));
             if (!string.IsNullOrEmpty(sourceDll))
                 dllFiles = dllFiles.Where(_ => _ != sourceDll).ToList();
             sourceAssembly = Assembly.LoadFrom(sourceDll);
