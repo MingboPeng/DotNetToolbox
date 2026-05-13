@@ -145,6 +145,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public static string GetTypeString(JsonSchema json)
     {
         var type = string.Empty;
+
         if ((json.AnyOf?.Any()).GetValueOrDefault())
         {
             var types = GetAnyOfTypes(json);
@@ -196,7 +197,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public static List<string> GetAnyOfTypes(JsonSchema json)
     {
         var types = new List<string>();
-        var anyof = json.AnyOf;
+        var anyof = json.AnyOf.Where(_=>_.Type != JsonObjectType.Null);
         foreach (var item in anyof)
         {
             var typeName = HandleType(item);
