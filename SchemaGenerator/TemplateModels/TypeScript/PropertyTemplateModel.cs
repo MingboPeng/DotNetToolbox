@@ -545,6 +545,14 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
             result.Add($"@IsOptional()");
         }
 
+        object constValue = string.Empty;
+        if (
+            (json.ExtensionData?.TryGetValue("const", out constValue)).GetValueOrDefault() &&
+            !string.IsNullOrEmpty(constValue?.ToString()))
+        {
+
+            result.Add($"@Equals(\"{constValue}\")");
+        }
 
         if (!string.IsNullOrEmpty(json.Pattern))
         {
