@@ -48,6 +48,9 @@ public class ClassTemplateModel : ClassTemplateModelBase
         IsAbstract = DerivedClasses.Any() && InheritedSchema == null;
 
         TsImports = Properties.SelectMany(_ => _.TsImports).Select(_ => new TsImport(_.Name, from: mapper.TryGetModule(_.From ?? _.Name))).ToList();
+        // add TsImport from parent properties with default value that is used in this class's init
+        var parentPropImportWithDefault = parentProperties.Where(_ => _.HasDefault).SelectMany(_ => _.TsImports);
+        TsImports.AddRange(parentPropImportWithDefault);
 
         // add base class reference
         if (!string.IsNullOrEmpty(Inheritance))

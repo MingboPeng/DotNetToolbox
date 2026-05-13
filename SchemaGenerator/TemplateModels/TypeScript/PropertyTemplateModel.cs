@@ -124,13 +124,14 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public static string GetTransform(JsonSchema json, bool isArray)
     {
         var code = string.Empty;
-        if ((json.AnyOf?.Any()).GetValueOrDefault())
+        var anyOf = json.AnyOf?.Where(_=>_.Type !=  JsonObjectType.Null);
+        if ((anyOf?.Any()).GetValueOrDefault())
         {
-            var allRefs = json.AnyOf.All(_ => _.HasReference);
+            var allRefs = anyOf.All(_ => _.HasReference);
             if (!allRefs)
                 return code;
 
-            var refTypes = json.AnyOf.Select(r => r.ActualSchema.Title).ToList();
+            var refTypes = anyOf.Select(r => r.ActualSchema.Title).ToList();
 
             var tps = refTypes.Select(_ => $"if (item?.type === '{_}') return {_}.fromJS(item);").ToList();
             tps = tps.Take(1).Concat(tps.Skip(1).Select(_ => $"else {_}")).ToList();
@@ -208,7 +209,8 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public static string GetTypeScriptType(JsonSchema json, Action<string> collectImportType)
     {
         var type = string.Empty;
-        if ((json.AnyOf?.Any()).GetValueOrDefault())
+        var anyOf = json.AnyOf?.Where(_ => _.Type != JsonObjectType.Null);
+        if ((anyOf?.Any()).GetValueOrDefault())
         {
             var types = GetAnyOfTypes(json, collectImportType);
             var tps = types.Select(_ => ConvertToTypeScriptType(_)).ToList();
@@ -236,8 +238,8 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public static List<string> GetAnyOfTypes(JsonSchema json, Action<string> collectImportType)
     {
         var types = new List<string>();
-        var anyof = json.AnyOf;
-        foreach (var item in anyof)
+        var anyOf = json.AnyOf?.Where(_ => _.Type != JsonObjectType.Null);
+        foreach (var item in anyOf)
         {
             var typeName = HandleType(item, collectImportType);
             types.Add(typeName);
