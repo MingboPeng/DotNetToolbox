@@ -49,6 +49,7 @@ public class PropertyTemplateModelBase
 
     public List<string> ExternalPackageNames { get; set; } = new List<string>();
     public bool IsExternalPackage => (ExternalPackageNames?.Any()).GetValueOrDefault();
+    protected JsonSchema sourceJson { get; set; }
 
     public PropertyTemplateModelBase(string name, JsonSchemaProperty json) : this(name, json, json.IsRequired, json.IsReadOnly)
     {
@@ -56,16 +57,29 @@ public class PropertyTemplateModelBase
 
     public PropertyTemplateModelBase(string name, JsonSchema json, bool isRequired, bool isReadOnly)
     {
+        sourceJson = json;
         PropertyName = name;
         Default = json.Default;
 
         Description = json.Description?.Replace("\n", "\\n")?.Replace("\"", "\"\"");
 
-        AnyOf = json.AnyOf?.ToList();
-        IsAnyOf = (AnyOf?.Any()).GetValueOrDefault();
+        var anyof = json.AnyOf?.Where(_=>_.Type != JsonObjectType.Null)?.ToList();
+        if (anyof is not null)
+        {
+            if (anyof.Count > 1)
+            {
+                AnyOf = anyof;
+                IsAnyOf = (AnyOf?.Any()).GetValueOrDefault();
+            }
+            else
+            {
+                sourceJson = anyof.FirstOrDefault() ?? json;
+            }
+      
+        }
         IsReadOnly = isReadOnly;
         IsRequired = isRequired;
-        IsArray = json.IsArray;
+        IsArray = sourceJson.IsArray;
     }
 
     public PropertyTemplateModelBase(ParameterInfo parameterInfo)

@@ -26,12 +26,12 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public PropertyTemplateModel(string name, JsonSchema json, bool isRequired, bool isReadOnly) : base(name, json, isRequired, isReadOnly)
     {
         // get default value for property for the current client
-        DefaultCodeFormat = ConvertDefaultValue(json);
+        DefaultCodeFormat = ConvertDefaultValue(this.sourceJson);
 
         // check types
         if (IsArray)
         {
-            Type = GetListTypeString(json, out var deepestItemType);
+            Type = GetListTypeString(this.sourceJson, out var deepestItemType);
             // check List type default
             if (HasDefault)
             {
@@ -40,7 +40,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         }
         else
         {
-            Type = GetTypeString(json);
+            Type = GetTypeString(this.sourceJson);
         }
 
         PropertyName = string.IsNullOrEmpty(PropertyName) ? this.Type : PropertyName;
@@ -49,13 +49,13 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         Description = String.IsNullOrEmpty(Description) ? CsPropertyName : Description;
         CsJsonPropertyNameName = PropertyName;
 
-        Pattern = json.Pattern;
-        Maximum = json.Maximum;
-        Minimum = json.Minimum;
-        MaxLength = json.MaxLength;
-        MinLength = json.MinLength;
+        Pattern = this.sourceJson.Pattern;
+        Maximum = this.sourceJson.Maximum;
+        Minimum = this.sourceJson.Minimum;
+        MaxLength = this.sourceJson.MaxLength;
+        MinLength = this.sourceJson.MinLength;
 
-        IsEnumType = json.ActualSchema.IsEnumeration;
+        IsEnumType = this.sourceJson.ActualSchema.IsEnumeration;
         IsValueType = CsValueType.Contains(Type) || IsEnumType;
 
         // check default value for constructor parameter

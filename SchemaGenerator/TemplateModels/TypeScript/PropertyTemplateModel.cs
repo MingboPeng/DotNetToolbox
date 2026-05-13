@@ -40,10 +40,10 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public PropertyTemplateModel(string name, JsonSchema json, bool isRequired, bool isReadOnly) : base(name, json, isRequired, isReadOnly)
     {
         // get default value for property for the current client
-        DefaultCodeFormat = ConvertTsDefaultValue(json);
+        DefaultCodeFormat = ConvertTsDefaultValue(this.sourceJson);
 
         // check types
-        this.Type = GetTypeScriptType(json, AddTsImportTypes);
+        this.Type = GetTypeScriptType(this.sourceJson, AddTsImportTypes);
 
         PropertyName = string.IsNullOrEmpty(PropertyName) ? this.Type : PropertyName;
         TsParameterName = Helper.CleanParameterName(PropertyName);
@@ -60,10 +60,10 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
             $"this.{TsPropertyName} = obj.{TsPropertyName};";
 
         //validation decorators
-        ValidationDecorators = GetValidationDecorators(json, isRequired: isRequired);
+        ValidationDecorators = GetValidationDecorators(this.sourceJson, isRequired: isRequired);
 
         // get @Transform
-        TransformDecorator = GetTransform(json, false);
+        TransformDecorator = GetTransform(this.sourceJson, false);
 
 
     }
