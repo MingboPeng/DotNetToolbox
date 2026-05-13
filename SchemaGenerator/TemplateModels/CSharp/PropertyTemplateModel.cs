@@ -50,12 +50,11 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
         CsJsonPropertyNameName = PropertyName;
 
         Pattern = this.sourceJson.Pattern;
-        Maximum = this.sourceJson.Maximum;
-        Minimum = this.sourceJson.Minimum;
+        Maximum = this.sourceJson.Maximum ?? this.sourceJson.ExclusiveMaximum;
+        Minimum = this.sourceJson.Minimum ?? this.sourceJson.ExclusiveMinimum;
         MaxLength = this.sourceJson.MaxLength;
         MinLength = this.sourceJson.MinLength;
 
-        IsEnumType = this.sourceJson.ActualSchema.IsEnumeration;
         IsValueType = CsValueType.Contains(Type) || IsEnumType;
 
         // check default value for constructor parameter

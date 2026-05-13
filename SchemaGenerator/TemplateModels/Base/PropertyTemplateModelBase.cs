@@ -63,7 +63,7 @@ public class PropertyTemplateModelBase
 
         Description = json.Description?.Replace("\n", "\\n")?.Replace("\"", "\"\"");
 
-        var anyof = json.AnyOf?.Where(_=>_.Type != JsonObjectType.Null)?.ToList();
+        var anyof = json.AnyOf?.Where(_ => _.Type != JsonObjectType.Null)?.ToList();
         if (anyof is not null)
         {
             if (anyof.Count > 1)
@@ -74,12 +74,35 @@ public class PropertyTemplateModelBase
             else
             {
                 sourceJson = anyof.FirstOrDefault() ?? json;
+                sourceJson.Pattern ??= json.Pattern;
+                sourceJson.Maximum ??= json.Maximum;
+                sourceJson.Minimum ??= json.Minimum;
+                sourceJson.ExclusiveMaximum ??= json.ExclusiveMaximum;
+                sourceJson.ExclusiveMinimum ??= json.ExclusiveMinimum;
+                sourceJson.MaxLength ??= json.MaxLength;
+                sourceJson.MinLength ??= json.MinLength;
+                sourceJson.Title ??= json.Title;
+                sourceJson.Default ??= json.Default;
+                sourceJson.Description ??= json.Description;
+
+                if (json.Type == JsonObjectType.String ||
+                    json.Type == JsonObjectType.Number ||
+                    json.Type == JsonObjectType.Boolean ||
+                    json.Type == JsonObjectType.Integer ||
+                    json.Type == JsonObjectType.Array
+                    )
+                {
+                    sourceJson.Type = json.Type;
+                }
             }
-      
+
         }
+
         IsReadOnly = isReadOnly;
         IsRequired = isRequired;
         IsArray = sourceJson.IsArray;
+        IsEnumType = sourceJson.ActualSchema.IsEnumeration;
+
     }
 
     public PropertyTemplateModelBase(ParameterInfo parameterInfo)
