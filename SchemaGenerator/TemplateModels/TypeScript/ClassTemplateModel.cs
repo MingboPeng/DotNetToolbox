@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using TemplateModels.Base;
 
 namespace TemplateModels.TypeScript;
+
 public class ClassTemplateModel : ClassTemplateModelBase
 {
 
@@ -36,14 +37,20 @@ public class ClassTemplateModel : ClassTemplateModelBase
 
         var parentProperties = json.AllInheritedSchemas
             .SelectMany(_ => _.ActualProperties).Select(_ => new PropertyTemplateModel(_.Key, _.Value))
-            .DistinctBy(_=>_.PropertyName).ToList();
+            .DistinctBy(_ => _.PropertyName).ToList();
 
         AllProperties = Properties.ToList();
         AllProperties.AddRange(parentProperties.Where(a => !Properties.Any(b => b.PropertyName == a.PropertyName)));
 
+        // prevent circular reference
+        if (this.HasInheritance && !this.Inheritance.ToLower().Contains("base"))
+        {
+            Properties = AllProperties.ToList();
+            this.Inheritance = string.Empty;
+        }
+
 
         DerivedClasses = json.GetDerivedSchemas(doc).Select(_ => new ClassTemplateModel(doc, _.Key, mapper)).ToList();
-        
 
         IsAbstract = DerivedClasses.Any() && InheritedSchema == null;
 
@@ -68,7 +75,7 @@ public class ClassTemplateModel : ClassTemplateModelBase
         paramValidators.Add("validate");
         paramValidators.Add("ValidationError as TsValidationError");
         TsValidatorImports = paramValidators.Distinct().ToList();
-        TsValidatorImports = TsValidatorImports.Where(_=>_ != "Type").ToList();
+        TsValidatorImports = TsValidatorImports.Where(_ => _ != "Type").ToList();
         var nestedValidators = TsValidatorImports.Where(x => x.StartsWith("IsNested")).ToList();
         if (nestedValidators.Any())
         {
