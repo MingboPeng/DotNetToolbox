@@ -234,11 +234,15 @@ public partial class Generator
 
         var baseVersion = $"{digits.First()}.{secondD}{thridD}";
         newVersion = $"{baseVersion}.{fourthD}";
+        if (Version.TryParse(newVersion, out var vNew))
+        {
+            newVersion = vNew.ToString();
+        }
         Console.WriteLine($"Re-formated document version: {newVersion}");
+
 
         var packageName = sdkName;
         var increaseVersion = false;
-
 
         // Check the version from nuget
         var api = $"https://api.nuget.org/v3-flatcontainer/{sdkName.ToLower()}/index.json";
@@ -251,11 +255,23 @@ public partial class Generator
                 nugetVersions.Sort(new VersionComparer());
                 var lastVersion = nugetVersions.Last().ToString();
                 Console.WriteLine($"Found latest version on Nuget: {lastVersion}");
-                increaseVersion = lastVersion.StartsWith(baseVersion);
-                if (increaseVersion)
-                    newVersion = lastVersion;
+
+                if (Version.TryParse(lastVersion, out var vLast) && vNew != null)
+                {
+                    increaseVersion = vLast >= vNew;
+                    if (increaseVersion)
+                        newVersion = lastVersion;
+                    else
+                        Console.WriteLine($"Schema version {newVersion} is newer than the latest version on Nuget: {lastVersion}");
+                }
                 else
-                    Console.WriteLine($"Schema version {newVersion} is newer than the latest version on Nuget: {lastVersion}");
+                {
+                    increaseVersion = lastVersion.StartsWith(newVersion);
+                    if (increaseVersion)
+                        newVersion = lastVersion;
+                    else
+                        Console.WriteLine($"Schema version {newVersion} is newer than the latest version on Nuget: {lastVersion}");
+                }
             }
         }
         catch (Exception)
