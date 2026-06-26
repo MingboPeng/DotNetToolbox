@@ -67,6 +67,7 @@ public class PropertyTemplateModelBase
 
         Description = json.Description?.Replace("\n", "\\n")?.Replace("\"", "\"\"");
 
+        var hasNullInAnyOf = (json.AnyOf?.Any(_ => _.Type == JsonObjectType.Null)).GetValueOrDefault();
         var anyof = json.AnyOf?.Where(_ => _.Type != JsonObjectType.Null)?.ToList();
         if (anyof is not null)
         {
@@ -106,7 +107,7 @@ public class PropertyTemplateModelBase
         IsRequired = isRequired;
         IsArray = sourceJson.IsArray;
         IsEnumType = sourceJson.ActualSchema.IsEnumeration;
-        IsNullable = sourceJson.IsNullableRaw.GetValueOrDefault();
+        IsNullable = sourceJson.IsNullableRaw.GetValueOrDefault() || hasNullInAnyOf;
     }
 
     public PropertyTemplateModelBase(ParameterInfo parameterInfo)
