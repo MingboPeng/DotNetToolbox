@@ -102,7 +102,7 @@ namespace {{ NameSpaceName }}
         // [System.Text.Json.Serialization.JsonRequired] // For System.Text.Json {% else %}
         // [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]  // For System.Text.Json  {% endif %}{% if property.HasPattern %}
         [RegularExpression(@"{{ property.Pattern }}")]{% endif %}{% if property.HasMaximum or property.HasMinimum %}
-        [Range({% if property.HasMinimum %}{{ property.Minimum }}{% else %}{{ property.Type }}.MinValue{% endif %}, {% if property.HasMaximum %}{{ property.Maximum }}{% else %}{{ property.Type }}.MaxValue{% endif %})]{% endif %}{% if property.HasMinLength %}
+        [Range({{ property.MinimumCodeFormat }}, {{ property.MaximumCodeFormat }})]{% endif %}{% if property.HasMinLength %}
         [MinLength({{ property.MinLength }})]{% endif %}{% if property.HasMaxLength %}
         [MaxLength({{ property.MaxLength }})]{% endif %}
         [DataMember(Name = "{{ property.CsJsonPropertyNameName }}"{% if property.IsRequired %}, IsRequired = true{% endif %})] // For internal Serialization XML/JSON

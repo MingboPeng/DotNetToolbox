@@ -1,11 +1,11 @@
 ﻿
-using TemplateModels.Base;
 using Newtonsoft.Json.Linq;
 using NJsonSchema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TemplateModels.Base;
 
 namespace TemplateModels.CSharp;
 
@@ -51,11 +51,15 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
 
         Pattern = this.sourceJson.Pattern;
         Maximum = this.sourceJson.Maximum ?? this.sourceJson.ExclusiveMaximum;
+        MaximumCodeFormat = HasMaximum ? Maximum.ToString() : $"{Type}.MaxValue";
         Minimum = this.sourceJson.Minimum ?? this.sourceJson.ExclusiveMinimum;
+        MinimumCodeFormat = HasMinimum ? Minimum.ToString() : $"{Type}.MinValue";
+
         MaxLength = this.sourceJson.MaxLength;
         MinLength = this.sourceJson.MinLength;
 
         IsValueType = CsValueType.Contains(Type) || IsEnumType;
+        Type = IsValueType && IsNullable ? $"{Type}?" : Type;
 
         // check default value for constructor parameter
         ConstructionParameterCode = $"{Type} {CsParameterName}";
@@ -196,7 +200,7 @@ public class PropertyTemplateModel : PropertyTemplateModelBase
     public static List<string> GetAnyOfTypes(JsonSchema json)
     {
         var types = new List<string>();
-        var anyof = json.AnyOf.Where(_=>_.Type != JsonObjectType.Null);
+        var anyof = json.AnyOf.Where(_ => _.Type != JsonObjectType.Null);
         foreach (var item in anyof)
         {
             var typeName = HandleType(item);

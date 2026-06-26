@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Newtonsoft.Json.Linq;
 using NJsonSchema;
 using NJsonSchema.Generation;
 using NSwag;
-using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using TemplateModels.CSharp;
+using System.Linq;
 using TemplateModels;
+using TemplateModels.CSharp;
 
 namespace SchemaGenerator;
 

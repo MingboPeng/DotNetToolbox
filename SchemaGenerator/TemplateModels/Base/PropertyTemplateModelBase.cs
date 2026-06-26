@@ -1,12 +1,11 @@
 ﻿using NJsonSchema;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
-using System.Collections;
-using System;
 
 namespace TemplateModels.Base;
 
@@ -37,8 +36,12 @@ public class PropertyTemplateModelBase
     public bool HasPattern => !string.IsNullOrEmpty(Pattern);
     public decimal? Maximum { get; set; }
     public bool HasMaximum => Maximum.HasValue;
+    public string MaximumCodeFormat { get; set; }
+
     public decimal? Minimum { get; set; }
     public bool HasMinimum => Minimum.HasValue;
+    public string MinimumCodeFormat { get; set; }
+
     //public bool IsInherited { get; set; }
     public bool IsValueType { get; set; }
     public bool IsEnumType { get; set; }
@@ -46,6 +49,7 @@ public class PropertyTemplateModelBase
     public bool HasMaxLength => MaxLength.HasValue;
     public int? MinLength { get; set; }
     public bool HasMinLength => MinLength.HasValue;
+    public bool IsNullable { get; set; }
 
     public List<string> ExternalPackageNames { get; set; } = new List<string>();
     public bool IsExternalPackage => (ExternalPackageNames?.Any()).GetValueOrDefault();
@@ -102,7 +106,7 @@ public class PropertyTemplateModelBase
         IsRequired = isRequired;
         IsArray = sourceJson.IsArray;
         IsEnumType = sourceJson.ActualSchema.IsEnumeration;
-
+        IsNullable = sourceJson.IsNullableRaw.GetValueOrDefault();
     }
 
     public PropertyTemplateModelBase(ParameterInfo parameterInfo)
