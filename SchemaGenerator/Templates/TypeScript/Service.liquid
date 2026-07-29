@@ -38,7 +38,7 @@ export class {{ClassName}} {
         ];
         {%- for param in method.Params -%}  
         {%- if param.HasDefault -%}
-        if({{param.TsParameterName}})params.push({ key: "{{param.TsParameterName}}", value: {{param.TsParameterName}} });
+        if({{param.TsParameterName}} != null)params.push({ key: "{{param.TsParameterName}}", value: {{param.TsParameterName}} });
         {%- endif -%}
         {%- endfor -%}
         {%- else -%}
