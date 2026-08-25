@@ -19,7 +19,7 @@ public class ClassTemplateModelBase
 
     public ClassTemplateModelBase(JsonSchema json)
     {
-        Description = json.Description?.Replace("\n", "\\n")?.Replace("\"", "\"\"");
+        Description = Helper.SingleLine(json.Description)?.Replace("\"", "\"\"");
         BaseDiscriminator = json.Discriminator;
 
         ClassName = json.Title;
@@ -30,15 +30,16 @@ public class ClassTemplateModelBase
 
     public ClassTemplateModelBase(Type classType, System.Xml.Linq.XDocument xmlDoc)
     {
-        Description = GetClassDoc(classType, xmlDoc);
+        Description = Helper.SingleLine(GetClassDoc(classType, xmlDoc));
 
         ClassName = classType.Name;
         Discriminator = ClassName;
 
-        if (classType.BaseType != null && classType.BaseType != typeof(object)) {
+        if (classType.BaseType != null && classType.BaseType != typeof(object))
+        {
             Inheritance = classType.BaseType?.Name;
         }
-      
+
 
         this.IsAbstract = classType.IsAbstract;
 

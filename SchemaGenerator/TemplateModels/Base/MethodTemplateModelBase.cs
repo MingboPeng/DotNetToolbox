@@ -33,8 +33,8 @@ public class MethodTemplateModelBase
 
         this.MethodName = Helper.CleanMethodName(operationName);
         var operation = openApi.First().Value;
-        this.Summary = operation.Summary;
-        this.Document = operation.Description;
+        this.Summary = Helper.SingleLine(operation.Summary);
+        this.Document = Helper.SingleLine(operation.Description);
 
         // all reference and non-reference type parameters
         if (operation?.ActualParameters != null && operation.ActualParameters.Any())
@@ -54,7 +54,7 @@ public class MethodTemplateModelBase
         HasReturn = !string.IsNullOrEmpty(ReturnTypeName) && returnParam.ParameterType != typeof(void) && returnParam.ParameterType != typeof(Task);
 
         MethodName = methodInfo.Name;
-       
+
 
         Document = document?.Summary;
         ReturnDoc = document?.Returns;

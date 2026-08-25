@@ -12,9 +12,9 @@ public class ServiceTemplateModelBase
         var member = xmlDoc.Descendants("member").FirstOrDefault(m => m.Attribute("name").Value.Equals(methodName));
 
         var doc = new MethodDoc();
-        doc.Summary = member?.Element("summary")?.Value.Trim();
-        doc.Params = member?.Elements("param").ToDictionary(_ => _.Attribute("name").Value, _ => _.Value);
-        doc.Returns = member?.Element("returns")?.Value.Trim();
+        doc.Summary = Helper.SingleLine(member?.Element("summary")?.Value.Trim());
+        doc.Params = member?.Elements("param").ToDictionary(_ => _.Attribute("name").Value, _ => Helper.SingleLine(_.Value));
+        doc.Returns = Helper.SingleLine(member?.Element("returns")?.Value.Trim());
         return doc;
     }
     public static string GetXmlDocumentationMemberName(MethodInfo methodInfo)

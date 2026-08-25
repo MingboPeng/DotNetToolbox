@@ -13,7 +13,7 @@ public class EnumTemplateModelBase
     public List<EnumItemTemplateModelBase> EnumItems { get; set; }
     public EnumTemplateModelBase(JsonSchema json)
     {
-        Description = json.Description?.Replace("\n", "\\n") ?? "An enumeration.";
+        Description = Helper.SingleLine(json.Description) ?? "An enumeration.";
         EnumName = json.Title;
         EnumItems = json.Enumeration.Select(_ => _.ToString()).Select((_, i) => new EnumItemTemplateModelBase(i + 1, _)).ToList();
 
@@ -31,10 +31,10 @@ public class EnumTemplateModelBase
         EnumItems = Enum.GetNames(type).Select((_, i) => new EnumItemTemplateModelBase(i + 1, _)).ToList();
 
         string xmlEnumName = $"T:{type.FullName}"; // Fully qualified enum name
-        Description = xmlDoc.Descendants("member")
+        Description = Helper.SingleLine(xmlDoc.Descendants("member")
                  .Where(m => (string)m.Attribute("name") == xmlEnumName)
                  .Select(m => m.Element("summary")?.Value.Trim())
-                 .FirstOrDefault();
+                 .FirstOrDefault());
 
     }
 }

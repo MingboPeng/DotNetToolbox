@@ -65,7 +65,7 @@ public class PropertyTemplateModelBase
         PropertyName = name;
         Default = json.Default;
 
-        Description = json.Description?.Replace("\n", "\\n")?.Replace("\"", "\"\"");
+        Description = Helper.SingleLine(json.Description)?.Replace("\"", "\"\"");
 
         var hasNullInAnyOf = (json.AnyOf?.Any(_ => _.Type == JsonObjectType.Null)).GetValueOrDefault();
         var anyof = json.AnyOf?.Where(_ => _.Type != JsonObjectType.Null)?.ToList();
@@ -156,7 +156,7 @@ public class PropertyTemplateModelBase
 
 
         // documentation
-        this.Description = GetPropertyDoc(propertyInfo, xmlDoc);
+        this.Description = Helper.SingleLine(GetPropertyDoc(propertyInfo, xmlDoc));
 
         // IsArray or List
         IsArray = propertyInfo.PropertyType.IsArray();

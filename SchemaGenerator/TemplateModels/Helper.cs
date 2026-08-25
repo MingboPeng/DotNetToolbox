@@ -23,7 +23,8 @@ namespace TemplateModels
             return type?.BaseType?.Name == "AnyOf";
         }
 
-        public static bool IsArray(this Type type) {
+        public static bool IsArray(this Type type)
+        {
 
             bool isEnumerable = typeof(IEnumerable).IsAssignableFrom(type);
             var IsArray = isEnumerable && type != typeof(string);
@@ -86,7 +87,7 @@ namespace TemplateModels
                                           .Select(_ => CheckTypeName(_))
                                           .ToArray();
 
-            
+
             if (Language == TargetLanguage.TypeScript)
             {
                 // AnyOf in TypeScript: (T1 | T2)
@@ -160,6 +161,17 @@ namespace TemplateModels
 
 
 
+        /// <summary>
+        /// Collapses any whitespace (including line breaks) in a description
+        /// into a single line so generated docs are always single-line.
+        /// </summary>
+        public static string SingleLine(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+            return Regex.Replace(text, @"\s+", " ").Trim();
+        }
+
         public static string GetMethodSummary(string assemblyPath, string typeName, string methodName)
         {
             // Load the assembly
@@ -183,7 +195,7 @@ namespace TemplateModels
                                 .FirstOrDefault(m => m.Attribute("name").Value.Equals(memberName))
                                 ?.Element("summary")?.Value.Trim();
 
-            return summary;
+            return SingleLine(summary);
         }
 
         public static string CheckTypeScriptTypeName(string typeName)
@@ -244,7 +256,7 @@ namespace TemplateModels
             }
 
             var words = input.Split(new[] { '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
-            if (words.Length ==1)
+            if (words.Length == 1)
             {
                 // CamelCase => camelCase
                 return char.ToLower(words[0][0]) + words[0].Substring(1);
