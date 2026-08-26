@@ -27,10 +27,11 @@ export class {{ClassName}} {
     {%- endfor -%}
     * @param timeoutMs Optional timeout in milliseconds. Defaults to DEFAULT_TIMEOUT_MS (30s).
     *                  Set to 0 or negative to disable timeout.
+    * @param signal Optional AbortSignal to cancel the request.
     * @returns A Promise of {{method.ReturnTypeName}}.
     */
     static async {{method.MethodName}}(
-        { {% for param in method.Params -%}{{param.TsParameterName}}{%if param.IsRequired == false %} = {%if param.HasDefault %}{{param.DefaultCodeFormat}}{% else %}undefined{% endif %}{% endif %}, {% endfor %}timeoutMs = undefined }: { {% for param in method.Params -%}{{param.TsParameterName}}{% if param.IsRequired == false %}?{% endif %}: {{param.Type}}; {% endfor %}timeoutMs?: number; }
+        { {% for param in method.Params -%}{{param.TsParameterName}}{%if param.IsRequired == false %} = {%if param.HasDefault %}{{param.DefaultCodeFormat}}{% else %}undefined{% endif %}{% endif %}, {% endfor %}timeoutMs = undefined, signal = undefined }: { {% for param in method.Params -%}{{param.TsParameterName}}{% if param.IsRequired == false %}?{% endif %}: {{param.Type}}; {% endfor %}timeoutMs?: number; signal?: AbortSignal; }
     ): Promise<{{method.ReturnTypeName}}> {
         {%- if method.HasParameter -%}
         const params: any[] = [{% for param in method.Params %}{%- if param.HasDefault == false %}
@@ -44,7 +45,7 @@ export class {{ClassName}} {
         {%- else -%}
         const params = undefined;
         {%- endif -%}
-        const request = createRequest("{{method.OperationId}}", params, timeoutMs);
+        const request = createRequest("{{method.OperationId}}", params, timeoutMs, signal);
         const done = await executeCSharp<{{method.ReturnTypeName}}>(request);
         {%- if method.IsReturnTypeMap -%}
         const data = convertTo{{method.ReturnTypeName}}(done);
@@ -61,7 +62,8 @@ export class {{ClassName}} {
 export function createRequest(
     methodName: string,
     params?: any[],
-    timeoutMs?: number
+    timeoutMs?: number,
+    signal?: AbortSignal
 ) {
 
     const request = {
@@ -69,7 +71,8 @@ export function createRequest(
         args: params,
         sdkName: {{ClassName}}.SDKName,
         sdkVersion: {{ClassName}}.SDKVersion,
-        timeoutMs: timeoutMs
+        timeoutMs: timeoutMs,
+        signal: signal
     };
 
     return request;
