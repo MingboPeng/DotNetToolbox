@@ -1,5 +1,6 @@
 ﻿// Auto-generated
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 {% if HasCsImports -%}
 {% for Package in CsPackages -%}
@@ -25,7 +26,7 @@ namespace {{ NameSpaceName }}
         protected {{ ClassName }}()
         {
             {%- for method in Methods %}
-            var delegate_{{method.MethodName}} = ({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.Type}} {{param.CsParameterName}}{% endfor %}) => this.{{method.MethodName}}({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.CsParameterName}}{% endfor %});
+            var delegate_{{method.MethodName}} = ({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.Type}} {{param.CsParameterName}}{% endfor %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}CancellationToken cancellationToken) => this.{{method.MethodName}}({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.CsParameterName}}{% endfor %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}cancellationToken);
             Methods.Add("{{method.OperationId}}", delegate_{{method.MethodName}});
             {%- endfor -%}
         }
@@ -35,8 +36,9 @@ namespace {{ NameSpaceName }}
 		/// {{method.Document}}
 		/// </summary>{% for param in method.Params %}
 		/// <param name="{{param.CsParameterName}}">{{param.Description}}</param>{% endfor %}
+		/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
 		/// <returns>{{method.ReturnDoc}}</returns>
-        public abstract {% if method.HasReturn %}Task<{{method.ReturnTypeName}}>{% else %}Task{% endif %} {{method.MethodName}}({% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.ConstructionParameterCode}}{% endfor %});
+        public abstract {% if method.HasReturn %}Task<{{method.ReturnTypeName}}>{% else %}Task{% endif %} {{method.MethodName}}({%- assign skipComma = true %}{% for param in method.Params %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{param.ConstructionParameterCode}}{% endfor %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}CancellationToken cancellationToken = default);
 		{% endfor %}
 	}
 
