@@ -68,11 +68,11 @@ namespace TemplateModels
                 if (type.IsArray)
                 {
                     var elemType = type.GetElementType();
-                    return $"{CheckTypeName(elemType.Name)}[]";
+                    return $"{ResolveTypeName(elemType)}[]";
                 }
                 else
                 {
-                    return CheckTypeName(type.Name);
+                    return ResolveTypeName(type);
                 }
 
             }
@@ -84,7 +84,6 @@ namespace TemplateModels
 
             string[] typeArguments = type.GetGenericArguments()
                                           .Select(_ => GetCheckTypeName(_))
-                                          .Select(_ => CheckTypeName(_))
                                           .ToArray();
 
 
@@ -98,6 +97,37 @@ namespace TemplateModels
             }
 
             return $"{typeName}<{string.Join(", ", typeArguments)}>";
+        }
+
+        /// <summary>
+        /// Resolves the type name for the current target language. For C#, types that come
+        /// from an external package (for example the Honeybee or Dragonfly schema) are fully
+        /// qualified so they stay unambiguous when multiple schema packages that share a type
+        /// name (such as <c>Model</c>) are imported together.
+        /// </summary>
+        private static string ResolveTypeName(Type type)
+        {
+            var name = CheckTypeName(type.Name);
+            if (Language == TargetLanguage.CSharp && IsExternalPackage(type))
+                return $"{type.Namespace}.{name}";
+            return name;
+        }
+
+        private static bool IsExternalPackage(Type type)
+        {
+            var ns = type.Namespace;
+            if (string.IsNullOrEmpty(ns))
+                return false;
+
+            // DTOs are generated into the SDK namespace and resolve without qualification.
+            if (ns == "DTO")
+                return false;
+
+            // Framework types keep their short names (List, Dictionary, Task, ...).
+            if (ns == "System" || ns.StartsWith("System."))
+                return false;
+
+            return true;
         }
 
         private static string CheckTypeName(string typeName)
